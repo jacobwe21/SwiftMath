@@ -641,5 +641,43 @@ public extension Measurement3D {
 		let values = a.converted(to: .baseUnit()).values / b.converted(to: .baseUnit()).values
 		return Measurement3D<R>(values: values, unit: .baseUnit())
 	}
-	
 }
+
+
+//public struct MyMeasurementValueField<EngrUnitType: EngineeringUnit, S>: View where S: FormatStyle, S: ParseableFormatStyle, S.FormatInput == Measurement<EngrUnitType>, S.FormatOutput == String {
+//	let description: String
+//	@Binding var measurement: Measurement<EngrUnitType>
+//	let format: S
+//	let width: CGFloat
+//	
+//	public init(_ measurement: Binding<Measurement<EngrUnitType>>, description: String = "", format: S, width: CGFloat = 120)  {
+//		self.width = width
+//		self.description = description
+//		_measurement = measurement
+//	}
+//	
+//	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
+//	
+//	public var body: some View {
+//		HStack {
+//			TextField(description, value: $measurement, format: format, prompt: Text("\(description)"))
+//			Menu {
+//				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
+//					Button {
+//						measurement.convert(to: unit as! EngrUnitType)
+//					} label: {
+//						Text(unit.symbol)
+//					}
+//				}
+//			} label: {
+//				Text(measurement.unit.symbol)
+//			}
+//		}
+//	}
+//}
+//
+//struct FieldsPreviews: PreviewProvider {
+//	static var previews: some View {
+//		MyMeasurementValueField(.constant(Measurement<UnitLength>(value: 12, unit: .inches)), format: .dateTime)
+//	}
+//}

@@ -1,13 +1,13 @@
 {
-  "originHash" : "8218186e595e6cb4586ea18ca807b9a5857864d95cdb54ddc82f46ee0bc9c85a",
+  "originHash" : "d59743ebbbaf3972a91196c1baaf0e1639ba03f561e1e46fe94202c8604272da",
   "pins" : [
     {
       "identity" : "myswift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jacobwe21/MySwift.git",
+      "location" : "https://github.com/jacobwe21/MySwift",
       "state" : {
         "branch" : "main",
-        "revision" : "207df48dcbcbab299e46c215cbdcca90c472be48"
+        "revision" : "f5e491f6e39ca67a39bb12fc1242150e2fda42c8"
       }
     }
   ],
