@@ -19,7 +19,75 @@ extension MathEquation {
 
 public struct Math {
 	
-	public struct PolynomialEQ: MathEquation {
+	public struct MultiEQ: MathEquation {
+		
+		init(segments: [Segment]) {
+			self.segments = segments
+		}
+		init(equations: [any MathEquation]) {
+			var newSegments = [Segment]()
+			for eq in equations {
+				newSegments.append(Segment(eq: eq))
+			}
+			self.segments = newSegments
+		}
+		
+		struct Segment {
+			var eq: any MathEquation
+			let xStart: Double
+			let xEnd: Double
+			let xStartIsInclusive: Bool
+			let xEndIsInclusive: Bool
+			init(eq: any MathEquation, xStart: Double = Double.leastNonzeroMagnitude, xEnd: Double = Double.greatestFiniteMagnitude, xStartIsInclusive: Bool = true, xEndIsInclusive: Bool = true) {
+				self.eq = eq
+				self.xStart = xStart
+				self.xEnd = xEnd
+				self.xStartIsInclusive = xStartIsInclusive
+				self.xEndIsInclusive = xEndIsInclusive
+			}
+		}
+		let segments: [Segment]
+		
+		public func callAsFunction(_ x: Double) -> Double {
+			var result = 0.0
+			for s in segments {
+				if s.xStart == x && !s.xStartIsInclusive { continue }
+				if s.xEnd == x && !s.xEndIsInclusive { continue }
+				if s.xStart <= x && s.xEnd >= x { result += s.eq(x) }
+			}
+			return result
+		}
+		
+		public func makeDerivative() -> any MathEquation {
+			var newSegments: [Segment] = []
+			for s in segments {
+				var segment = s
+				segment.eq = s.eq.makeDerivative()
+				newSegments.append(segment)
+			}
+			return MultiEQ(segments: newSegments)
+		}
+		
+		public func integrate(plus c: Double) -> any MathEquation {
+			var newSegments: [Segment] = []
+			for s in segments {
+				var segment = s
+				segment.eq = s.eq.integrate(plus: c)
+				newSegments.append(segment)
+			}
+			return MultiEQ(segments: newSegments)
+		}
+		
+		public var description: String {
+			var str = "{/n"
+			for s in segments {
+				str += s.eq.description + ", [\(s.xStart),\(s.xEnd)] \n"
+			}
+			return str+"/n}"
+		}
+	}
+	
+	public struct BasicPolynomialEQ: MathEquation {
 		
 		let terms: [Term]
 		
@@ -44,7 +112,7 @@ public struct Math {
 				if components.count == 2 {
 					let a = components.first!
 					let n = components.last!
-					terms.append(Term(Double(a) ?? 1, xToThe: Double(n) ?? 1))
+					terms.append(Term(Double(a) ?? 1, xToTheDouble: Double(n) ?? 1))
 				} else if components.count == 1 {
 					let a = components.first!
 					terms.append(Term(Double(a) ?? 1, xToThe: 0))
@@ -65,20 +133,20 @@ public struct Math {
 			var newTerms = [Term]()
 			for term in terms {
 				if term.degree > 0 {
-					newTerms.append(Term(term.coefficient*term.degree, xToThe: term.degree-1))
+					newTerms.append(Term(term.coefficient*term.degree, xToTheDouble: term.degree-1))
 				}
 			}
-			return PolynomialEQ(terms: newTerms)
+			return BasicPolynomialEQ(terms: newTerms)
 		}
 		public func integrate(plus c: Double) -> MathEquation {
 			var newTerms = [Term]()
 			for term in terms {
 				if term.degree > 0 {
-					newTerms.append(Term(term.coefficient/(term.degree+1), xToThe: term.degree+1))
+					newTerms.append(Term(term.coefficient/(term.degree+1), xToTheDouble: term.degree+1))
 				}
 			}
-			newTerms.append(Term(c, xToThe: 0))
-			return PolynomialEQ(terms: newTerms)
+			newTerms.append(Term(c, xToTheDouble: 0))
+			return BasicPolynomialEQ(terms: newTerms)
 		}
 		
 		public var description: String {
@@ -91,8 +159,12 @@ public struct Math {
 			let degree: Double
 			let coefficient: Double
 			
-			public init(_ coefficient: Double, xToThe degree: Double) {
-				self.degree = degree
+			public init(_ coefficient: Double, xToThe degree: UInt) {
+				self.degree = Double(degree)
+				self.coefficient = coefficient
+			}
+			init(_ coefficient: Double, xToTheDouble degree: Double) {
+				self.degree = Double(degree)
 				self.coefficient = coefficient
 			}
 			

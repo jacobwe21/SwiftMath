@@ -21,9 +21,9 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 	public static let inverseCelsius = UnitInverseTemperature(symbol: "1/°C", converter: UnitConverterInverting(coefficient: 1, constant: -237.15))
 	public static let inverseFahrenheit = UnitInverseTemperature(symbol: "1/°F", converter: UnitConverterInverting(coefficient: 5/9, constant: -459.67))
 
-	public override class func baseUnit() -> Self {
-		UnitInverseTemperature.inverseKelvin as! Self
-	}
+//	public override class func baseUnit() -> Self {
+//		UnitInverseTemperature.inverseKelvin as! Self
+//	}
 	
 	public var isImperial: Bool {
 		if self ==|| [.inverseFahrenheit] {
@@ -643,41 +643,49 @@ public extension Measurement3D {
 	}
 }
 
+public struct MyMeasurementValueField<EngrUnitType: EngineeringUnit>: View {
+	
+	@Environment(\.deviceOS) var os
+	let description: String
+	@Binding var measurement: Measurement<EngrUnitType>
+	
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>)  {
+		self.description = description
+		_measurement = measurement
+	}
+	
+	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
+	
+	public var body: some View {
+		GeometryReader { geoReader in
+			HStack {
+				Text("\(description)")
+				Spacer()
+				TextField(description, value: $measurement.value, format: .number)
+					.textFieldStyle(.roundedBorder)
+					.frame(width: geoReader.size.width/3)
+				Menu {
+					ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
+						Button {
+							measurement.convert(to: unit as! EngrUnitType)
+						} label: {
+							Text(unit.symbol)
+						}
+					}
+				} label: {
+					Text(measurement.unit.symbol)
+				}
+				.macOS({$0.frame(width: 70)})
+			}
+		}
+	}
+}
 
-//public struct MyMeasurementValueField<EngrUnitType: EngineeringUnit, S>: View where S: FormatStyle, S: ParseableFormatStyle, S.FormatInput == Measurement<EngrUnitType>, S.FormatOutput == String {
-//	let description: String
-//	@Binding var measurement: Measurement<EngrUnitType>
-//	let format: S
-//	let width: CGFloat
-//	
-//	public init(_ measurement: Binding<Measurement<EngrUnitType>>, description: String = "", format: S, width: CGFloat = 120)  {
-//		self.width = width
-//		self.description = description
-//		_measurement = measurement
-//	}
-//	
-//	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
-//	
-//	public var body: some View {
-//		HStack {
-//			TextField(description, value: $measurement, format: format, prompt: Text("\(description)"))
-//			Menu {
-//				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
-//					Button {
-//						measurement.convert(to: unit as! EngrUnitType)
-//					} label: {
-//						Text(unit.symbol)
-//					}
-//				}
-//			} label: {
-//				Text(measurement.unit.symbol)
-//			}
-//		}
-//	}
-//}
-//
-//struct FieldsPreviews: PreviewProvider {
-//	static var previews: some View {
-//		MyMeasurementValueField(.constant(Measurement<UnitLength>(value: 12, unit: .inches)), format: .dateTime)
-//	}
-//}
+struct FieldsPreviews: PreviewProvider {
+	static var previews: some View {
+		ZStack {
+			MyMeasurementValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
+				.padding()
+		}
+	}
+}
