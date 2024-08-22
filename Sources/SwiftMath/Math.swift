@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import MySwift
+
 
 public protocol MathEquation: CustomStringConvertible {
 	func callAsFunction(_ x: Double) -> Double
@@ -124,7 +124,7 @@ public struct Math {
 		public func callAsFunction(_ x: Double) -> Double {
 			var result = 0.0
 			for term in terms {
-				result += (term.coefficient*x**term.degree)
+				result += (term.coefficient*pow(x, term.degree))
 			}
 			return result
 		}

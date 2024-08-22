@@ -643,7 +643,7 @@ public extension Measurement3D {
 	}
 }
 
-public struct MyMeasurementValueField<EngrUnitType: EngineeringUnit>: View {
+public struct MeasurementValueField<EngrUnitType: EngineeringUnit>: View {
 	
 	@Environment(\.deviceOS) var os
 	let description: String
@@ -680,11 +680,42 @@ public struct MyMeasurementValueField<EngrUnitType: EngineeringUnit>: View {
 		}
 	}
 }
+public struct MeasurementValueDisplay<EngrUnitType: EngineeringUnit>: View {
+	
+	@Environment(\.deviceOS) var os
+	let description: String
+	@Binding var measurement: Measurement<EngrUnitType>
+	
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>)  {
+		self.description = description
+		_measurement = measurement
+	}
+	
+	public var body: some View {
+		HStack {
+			Text("\(description)")
+			Spacer()
+			Text("\(measurement.value)")
+			Menu {
+				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
+					Button {
+						measurement.convert(to: unit as! EngrUnitType)
+					} label: {
+						Text(unit.symbol)
+					}
+				}
+			} label: {
+				Text(measurement.unit.symbol)
+			}
+			.macOS({$0.frame(width: 70)})
+		}
+	}
+}
 
 struct FieldsPreviews: PreviewProvider {
 	static var previews: some View {
 		ZStack {
-			MyMeasurementValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
+			MeasurementValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
 				.padding()
 		}
 	}
