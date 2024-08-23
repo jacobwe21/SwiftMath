@@ -648,10 +648,14 @@ public struct MeasurementValueField<EngrUnitType: EngineeringUnit>: View {
 	@Environment(\.deviceOS) var os
 	let description: String
 	@Binding var measurement: Measurement<EngrUnitType>
+	let minValue: Measurement<EngrUnitType>?
+	let maxValue: Measurement<EngrUnitType>?
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil)  {
 		self.description = description
 		_measurement = measurement
+		self.minValue = minValue
+		self.maxValue = maxValue
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -691,11 +695,14 @@ public struct MeasurementValueDisplay<EngrUnitType: EngineeringUnit>: View {
 		_measurement = measurement
 	}
 	
+	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
+	
 	public var body: some View {
 		HStack {
 			Text("\(description)")
 			Spacer()
-			Text("\(measurement.value)")
+			Text("\(measurement.value.formatted(minSignificantDigits: 1, maxSignificantDigits: 4))")
+//			Text("\(measurement.formatted(measurementFormatStyle))")
 			Menu {
 				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
 					Button {
@@ -715,8 +722,12 @@ public struct MeasurementValueDisplay<EngrUnitType: EngineeringUnit>: View {
 struct FieldsPreviews: PreviewProvider {
 	static var previews: some View {
 		ZStack {
-			MeasurementValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
-				.padding()
+			VStack {
+				MeasurementValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
+					.padding()
+				MeasurementValueDisplay("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
+					.padding()
+			}
 		}
 	}
 }
