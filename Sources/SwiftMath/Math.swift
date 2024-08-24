@@ -21,10 +21,10 @@ public struct Math {
 	
 	public struct MultiEQ: MathEquation {
 		
-		init(segments: [Segment]) {
+		public init(segments: [Segment]) {
 			self.segments = segments
 		}
-		init(equations: [any MathEquation]) {
+		public init(equations: [any MathEquation]) {
 			var newSegments = [Segment]()
 			for eq in equations {
 				newSegments.append(Segment(eq: eq))
@@ -32,7 +32,7 @@ public struct Math {
 			self.segments = newSegments
 		}
 		
-		struct Segment {
+		public struct Segment {
 			var eq: any MathEquation
 			let xStart: Double
 			let xEnd: Double
@@ -46,7 +46,7 @@ public struct Math {
 				self.xEndIsInclusive = xEndIsInclusive
 			}
 		}
-		let segments: [Segment]
+		public let segments: [Segment]
 		
 		public func callAsFunction(_ x: Double) -> Double {
 			var result = 0.0
@@ -89,9 +89,9 @@ public struct Math {
 	
 	public struct BasicPolynomialEQ: MathEquation {
 		
-		let terms: [Term]
+		public let terms: [Term]
 		
-		init(terms: [Term]) {
+		public init(terms: [Term]) {
 			self.terms = terms
 		}
 		public init(terms: Term...) {
