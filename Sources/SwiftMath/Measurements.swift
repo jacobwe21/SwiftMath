@@ -643,7 +643,7 @@ public extension Measurement3D {
 	}
 }
 
-public struct MeasurementValueField<EngrUnitType: EngineeringUnit>: View {
+public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 	
 	@Environment(\.deviceOS) var os
 	let description: String
@@ -684,7 +684,7 @@ public struct MeasurementValueField<EngrUnitType: EngineeringUnit>: View {
 		}
 	}
 }
-public struct MeasurementValueDisplay<EngrUnitType: EngineeringUnit>: View {
+public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 	
 	@Environment(\.deviceOS) var os
 	let description: String

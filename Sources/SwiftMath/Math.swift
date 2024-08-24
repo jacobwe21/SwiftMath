@@ -38,7 +38,7 @@ public struct Math {
 			let xEnd: Double
 			let xStartIsInclusive: Bool
 			let xEndIsInclusive: Bool
-			init(eq: any MathEquation, xStart: Double = Double.leastNonzeroMagnitude, xEnd: Double = Double.greatestFiniteMagnitude, xStartIsInclusive: Bool = true, xEndIsInclusive: Bool = true) {
+			public init(eq: any MathEquation, xStart: Double = Double.leastNonzeroMagnitude, xEnd: Double = Double.greatestFiniteMagnitude, xStartIsInclusive: Bool = true, xEndIsInclusive: Bool = true) {
 				self.eq = eq
 				self.xStart = xStart
 				self.xEnd = xEnd
