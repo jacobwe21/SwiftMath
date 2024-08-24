@@ -580,6 +580,19 @@ public extension Measurement3D {
 	static func / <R: UnitLength>(a: Measurement3D<UnitWork>, b: Measurement3D<UnitForce>) -> Measurement3D<R> {
 		return Self.divideMeasurementsIntoNewMeasurement(a: a, b: b, returnType: R.self)
 	}
+	// M = Fd
+	static func * <R: UnitWork>(a: Measurement3D<UnitForce>, b: Measurement<UnitLength>) -> Measurement3D<R> {
+		let b2 = Measurement3D<UnitLength>(values: SIMD3(b.value,b.value,b.value), unit: b.unit)
+		return Self.multiplyMeasurementsIntoNewMeasurement(a: a, b: b2, returnType: R.self)
+	}
+	static func * <R: UnitWork>(a: Measurement<UnitLength>, b: Measurement3D<UnitForce>) -> Measurement3D<R> {
+		let a2 = Measurement3D<UnitLength>(values: SIMD3(a.value,a.value,a.value), unit: a.unit)
+		return Self.multiplyMeasurementsIntoNewMeasurement(a: a2, b: b, returnType: R.self)
+	}
+	static func / <R: UnitForce>(a: Measurement3D<UnitWork>, b: Measurement<UnitLength>) -> Measurement3D<R> {
+		let b2 = Measurement3D<UnitLength>(values: SIMD3(b.value,b.value,b.value), unit: b.unit)
+		return Self.divideMeasurementsIntoNewMeasurement(a: a, b: b2, returnType: R.self)
+	}
 	
 	// F = W*d
 	static func * <R: UnitForce>(a: Measurement3D<UnitLinearForce>, b: Measurement3D<UnitLength>) -> Measurement3D<R> {
@@ -593,6 +606,18 @@ public extension Measurement3D {
 	}
 	static func / <R: UnitLength>(a: Measurement3D<UnitForce>, b: Measurement3D<UnitLinearForce>) -> Measurement3D<R> {
 		return Self.divideMeasurementsIntoNewMeasurement(a: a, b: b, returnType: R.self)
+	}
+	static func * <R: UnitForce>(a: Measurement3D<UnitLinearForce>, b: Measurement<UnitLength>) -> Measurement3D<R> {
+		let b2 = Measurement3D<UnitLength>(values: SIMD3(b.value,b.value,b.value), unit: b.unit)
+		return Self.multiplyMeasurementsIntoNewMeasurement(a: a, b: b2, returnType: R.self)
+	}
+	static func * <R: UnitForce>(a: Measurement<UnitLength>, b: Measurement3D<UnitLinearForce>) -> Measurement3D<R> {
+		let a2 = Measurement3D<UnitLength>(values: SIMD3(a.value,a.value,a.value), unit: a.unit)
+		return Self.multiplyMeasurementsIntoNewMeasurement(a: a2, b: b, returnType: R.self)
+	}
+	static func / <R: UnitLinearForce>(a: Measurement3D<UnitForce>, b: Measurement<UnitLength>) -> Measurement3D<R> {
+		let b2 = Measurement3D<UnitLength>(values: SIMD3(b.value,b.value,b.value), unit: b.unit)
+		return Self.divideMeasurementsIntoNewMeasurement(a: a, b: b2, returnType: R.self)
 	}
 	
 	// W = P*L
