@@ -21,9 +21,9 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 	public static let inverseCelsius = UnitInverseTemperature(symbol: "1/°C", converter: UnitConverterInverting(coefficient: 1, constant: -237.15))
 	public static let inverseFahrenheit = UnitInverseTemperature(symbol: "1/°F", converter: UnitConverterInverting(coefficient: 5/9, constant: -459.67))
 
-//	public override class func baseUnit() -> Self {
-//		UnitInverseTemperature.inverseKelvin as! Self
-//	}
+	public override class func baseUnit() -> Self {
+		UnitInverseTemperature.inverseKelvin as! Self
+	}
 	
 	public var isImperial: Bool {
 		if self ==|| [.inverseFahrenheit] {
@@ -71,7 +71,9 @@ public class UnitDensity: Dimension, EngineeringUnit {
 	
 	public static let poundsPerCubicFoot = UnitDensity(symbol: "lb/ft³", converter: UnitConverterLinear(coefficient: 0.062427960576145))
 	
-	public static let baseUnit = UnitDensity.kilogramPerCubicMeter
+	public override class func baseUnit() -> Self {
+		return UnitDensity.kilogramPerCubicMeter as! Self
+	}
 	
 	public var isImperial: Bool {
 		if self ==|| [.poundsPerCubicFoot] {
@@ -86,7 +88,9 @@ public class UnitForce: Dimension, EngineeringUnit {
 	public static let pound = UnitForce(symbol: "lb", converter: UnitConverterLinear(coefficient: 0.22480894244318786))
 	public static let kip = UnitForce(symbol: "k", converter: UnitConverterLinear(coefficient: 224.80894244318786))
 	
-	public static let baseUnit = UnitForce.newton
+	public override class func baseUnit() -> Self {
+		return UnitForce.newton as! Self
+	}
 	public static let allEngineeringUnits: [UnitForce] = [.newton,.pound,.kip,.kilonewton]
 	
 	public var isImperial: Bool {
@@ -108,7 +112,9 @@ public class UnitLinearForce: Dimension, EngineeringUnit {
 	public static let kipsPerInch = UnitLinearForce(symbol: "k/in", converter: UnitConverterLinear(coefficient: 822.2611589428))
 	public static let poundsPerInch = UnitLinearForce(symbol: "lb/in", converter: UnitConverterLinear(coefficient: 0.8222611589))
 	
-	public static let baseUnit = UnitLinearForce.newtonsPerMeter
+	public override class func baseUnit() -> Self {
+		return UnitLinearForce.newtonsPerMeter as! Self
+	}
 	public static let allEngineeringUnits: [UnitLinearForce] = [.newtonsPerMeter,.kilonewtonsPerMeter,.newtonsPerCentimeter,.newtonsPerMillimeter,.kilonewtonsPerMillimeter,.poundsPerFoot,.poundsPerInch,.kipsPerFoot,.kipsPerInch]
 	
 	public var isImperial: Bool {
@@ -129,7 +135,9 @@ public class UnitWork: Dimension, EngineeringUnit {
 	public static let kipInches = UnitWork(symbol: "k•in", converter: UnitConverterLinear(coefficient: 8850.745454))
 	public static let poundInches = UnitWork(symbol: "lb•in", converter: UnitConverterLinear(coefficient: 8.850745454))
 	
-	public static let baseUnit = UnitWork.newtonMeters
+	public override class func baseUnit() -> Self {
+		return UnitWork.newtonMeters as! Self
+	}
 	public static let allEngineeringUnits: [UnitWork] = [ .newtonMeters, .newtonCentimeters, .newtonMillimeters, .kilonewtonMeters, .poundFeet, .kipFeet, .kipInches, .poundInches]
 	
 	public var isImperial: Bool {
@@ -214,7 +222,9 @@ public class UnitTesseract: Dimension, EngineeringUnit {
 	public static let tesseractFeet = UnitTesseract(symbol: "ft⁴", converter: UnitConverterLinear(coefficient: 115.86176709923))
 	public static let tesseractInches = UnitTesseract(symbol: "in⁴", converter: UnitConverterLinear(coefficient: 2402509.61000961))
 	
-	public static let baseUnit = UnitTesseract.tesseractMeters
+	public override class func baseUnit() -> Self {
+		return UnitTesseract.tesseractMeters as! Self
+	}
 	public static let allEngineeringUnits: [UnitTesseract] = [.tesseractMeters,.tesseractCentimeters,.tesseractMillimeters,.tesseractFeet,.tesseractInches]
 	
 	public var isImperial: Bool {
@@ -431,9 +441,9 @@ public extension Measurement where UnitType: Dimension {
 	func baseUnitValue() -> Double {
 		return self.converted(to: .baseUnit()).value
 	}
-	/// Returns the absolute value of a Measurement. The returned value is in the `baseUnit`.
+	/// Returns the absolute value of a Measurement.
 	func abs() -> Self {
-		Measurement(value: Swift.abs(self.baseUnitValue()), unit: .baseUnit())
+		Measurement(value: Swift.abs(self.value), unit: self.unit)
 	}
 }
 extension Measurement: AdditiveArithmetic where UnitType: Dimension {
@@ -580,7 +590,6 @@ public extension Measurement3D {
 	static func / <R: UnitLength>(a: Measurement3D<UnitWork>, b: Measurement3D<UnitForce>) -> Measurement3D<R> {
 		return Self.divideMeasurementsIntoNewMeasurement(a: a, b: b, returnType: R.self)
 	}
-	// M = Fd
 	static func * <R: UnitWork>(a: Measurement3D<UnitForce>, b: Measurement<UnitLength>) -> Measurement3D<R> {
 		let b2 = Measurement3D<UnitLength>(values: SIMD3(b.value,b.value,b.value), unit: b.unit)
 		return Self.multiplyMeasurementsIntoNewMeasurement(a: a, b: b2, returnType: R.self)
