@@ -723,9 +723,9 @@ struct FieldsPreviews: PreviewProvider {
 	static var previews: some View {
 		ZStack {
 			VStack {
-				MeasurementValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
+				ENGRValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
 					.padding()
-				MeasurementValueDisplay("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
+				ENGRValueDisplay("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
 					.padding()
 			}
 		}
