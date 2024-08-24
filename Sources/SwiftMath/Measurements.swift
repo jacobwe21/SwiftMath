@@ -545,6 +545,17 @@ public extension Measurement3D where UnitType: Dimension {
 		copy.convert(to: newUnit)
 		return copy
 	}
+	/// A function that produces a dimensionless vector from two units with the same `Dimension` type.
+	static func / <D: Dimension>(lhs: Measurement3D<D>, rhs: Measurement3D<D>) -> SIMD3<Double> {
+		let v0 = lhs.converted(to: .baseUnit()).values.x / rhs.converted(to: .baseUnit()).values.x
+		let v1 = lhs.converted(to: .baseUnit()).values.y / rhs.converted(to: .baseUnit()).values.y
+		let v2 = lhs.converted(to: .baseUnit()).values.z / rhs.converted(to: .baseUnit()).values.z
+		return SIMD3(v0, v1, v2)
+	}
+	/// Returns the effective "distance" of the measurement using pythagorean theorem.
+	func distance() -> Measurement<UnitType> {
+		Measurement(value: sqrt(values.x**2+values.y**2+values.z**2), unit: self.unit)
+	}
 	init() {
 		self.init(values: SIMD3(), unit: .baseUnit())
 	}
