@@ -21,9 +21,9 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 	public static let inverseCelsius = UnitInverseTemperature(symbol: "1/°C", converter: UnitConverterInverting(coefficient: 1, constant: -237.15))
 	public static let inverseFahrenheit = UnitInverseTemperature(symbol: "1/°F", converter: UnitConverterInverting(coefficient: 5/9, constant: -459.67))
 
-	public override class func baseUnit() -> Self {
-		UnitInverseTemperature.inverseKelvin as! Self
-	}
+//	public override class func baseUnit() -> Self {
+//		return UnitInverseTemperature.inverseKelvin as! Self
+//	}
 	
 	public var isImperial: Bool {
 		if self ==|| [.inverseFahrenheit] {
@@ -529,14 +529,6 @@ public struct Measurement3D<UnitType>: Comparable, CustomDebugStringConvertible,
 	}
 }
 public extension Measurement3D where UnitType: Dimension {
-//	/// Adds two measurements of the same dimension.
-//	static func + (lhs: Measurement3D<UnitType>, rhs: Measurement3D<UnitType>) -> Measurement3D<UnitType> {
-//		Measurement3D<UnitType>(values: lhs.values+rhs.values, unit: .baseUnit())
-//	}
-//	/// Subtracts two measurements of the same dimension.
-//	static func - (rhs: Measurement3D<UnitType>, lhs: Measurement3D<UnitType>) -> Measurement3D<UnitType> {
-//		Measurement3D<UnitType>(values: lhs.values-rhs.values, unit: .baseUnit())
-//	}
 	
 	func baseUnitValues() -> SIMD3<Double> {
 		return self.converted(to: .baseUnit()).values
@@ -693,6 +685,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 	@Environment(\.deviceOS) var os
 	let description: String
 	@Binding var measurement: Measurement<EngrUnitType>
+	@State private var measurementUnit: EngrUnitType
 	let minValue: Measurement<EngrUnitType>?
 	let maxValue: Measurement<EngrUnitType>?
 	
@@ -701,11 +694,13 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 		_measurement = measurement
 		self.minValue = minValue
 		self.maxValue = maxValue
+		_measurementUnit = State(initialValue: measurement.wrappedValue.unit)
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
 	
 	public var body: some View {
+		#if os(macOS)
 		GeometryReader { geoReader in
 			HStack {
 				Text("\(description)")
@@ -727,17 +722,35 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 				.macOS({$0.frame(width: 70)})
 			}
 		}
+		#else
+		HStack {
+			Text("\(description)")
+			Spacer()
+			TextField(description, value: $measurement.value, format: .number)
+				.textFieldStyle(.roundedBorder)
+				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
+			Picker("\(description)", selection: $measurementUnit) {
+				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
+					HStack { Text(unit.symbol) }
+				}
+			}
+			.onChange(of: measurementUnit) {
+				measurement.convert(to: measurementUnit)
+			}
+			.macOS({$0.frame(width: 200)})
+		}
+		#endif
 	}
 }
 public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 	
 	@Environment(\.deviceOS) var os
 	let description: String
-	@Binding var measurement: Measurement<EngrUnitType>
+	@State var measurement: Measurement<EngrUnitType>
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>)  {
+	public init(_ description: String, _ measurement: Measurement<EngrUnitType>)  {
 		self.description = description
-		_measurement = measurement
+		_measurement = State(initialValue: measurement)
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -746,20 +759,25 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 		HStack {
 			Text("\(description)")
 			Spacer()
-			Text("\(measurement.value.formatted(minSignificantDigits: 1, maxSignificantDigits: 4))")
+			//Text("\(measurement.value.formatted(maxSignificantDigits: 4))")
 //			Text("\(measurement.formatted(measurementFormatStyle))")
-			Menu {
+			Picker("\(measurement.formatted(measurementFormatStyle))", selection: $measurement) {
 				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
-					Button {
-						measurement.convert(to: unit as! EngrUnitType)
-					} label: {
-						Text(unit.symbol)
-					}
+					Text(unit.symbol)
 				}
-			} label: {
-				Text(measurement.unit.symbol)
-			}
-			.macOS({$0.frame(width: 70)})
+			}.macOS({$0.frame(width: 200)})
+//			Menu {
+//				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
+//					Button {
+//						measurement.convert(to: unit as! EngrUnitType)
+//					} label: {
+//						Text(unit.symbol)
+//					}
+//				}
+//			} label: {
+//				Text(measurement.unit.symbol)
+//			}
+//			.macOS({$0.frame(width: 70)})
 		}
 	}
 }
@@ -770,7 +788,8 @@ struct FieldsPreviews: PreviewProvider {
 			VStack {
 				ENGRValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
 					.padding()
-				ENGRValueDisplay("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
+				Spacer()
+				ENGRValueDisplay("Length", Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter))
 					.padding()
 			}
 		}
