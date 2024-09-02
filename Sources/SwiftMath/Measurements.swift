@@ -706,7 +706,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 				Text("\(description)")
 				Spacer()
 				TextField(description, value: $measurement.value, format: .number)
-					.textFieldStyle(.roundedBorder)
+					.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
 					.frame(width: geoReader.size.width/3)
 				Menu {
 					ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
@@ -727,7 +727,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 			Text("\(description)")
 			Spacer()
 			TextField(description, value: $measurement.value, format: .number)
-				.textFieldStyle(.roundedBorder)
+				.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
 			Picker("\(description)", selection: $measurementUnit) {
 				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
@@ -747,10 +747,12 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 	@Environment(\.deviceOS) var os
 	let description: String
 	@State var measurement: Measurement<EngrUnitType>
+	@State private var measurementUnit: EngrUnitType
 	
 	public init(_ description: String, _ measurement: Measurement<EngrUnitType>)  {
 		self.description = description
 		_measurement = State(initialValue: measurement)
+		_measurementUnit = State(initialValue: measurement.unit)
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -759,13 +761,17 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 		HStack {
 			Text("\(description)")
 			Spacer()
-			//Text("\(measurement.value.formatted(maxSignificantDigits: 4))")
-//			Text("\(measurement.formatted(measurementFormatStyle))")
-			Picker("\(measurement.formatted(measurementFormatStyle))", selection: $measurement) {
+			Text(measurement.value.formatted(sigFigs: ...4))
+			Picker("Unit", selection: $measurementUnit) {
 				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
-					Text(unit.symbol).tag(unit.symbol)
+					Text(unit.symbol).tag(unit)
 				}
-			}.macOS({$0.frame(width: 200)})
+			}
+			.onChange(of: measurementUnit) { oldValue, newValue in
+				measurement.convert(to: newValue)
+			}
+			.pickerStyle(.menu)
+			.macOS({$0.frame(width: 200)})
 //			Menu {
 //				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
 //					Button {
@@ -789,7 +795,7 @@ struct FieldsPreviews: PreviewProvider {
 				ENGRValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
 					.padding()
 				Spacer()
-				ENGRValueDisplay("Length", Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter))
+				ENGRValueDisplay("Length", Measurement<UnitDensity>(value: 12.0110010, unit: .kilogramPerCubicMeter))
 					.padding()
 			}
 		}
