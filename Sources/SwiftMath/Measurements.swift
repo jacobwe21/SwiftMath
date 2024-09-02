@@ -64,7 +64,7 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 }
 ///  A unit of measure for density (technically the same as `UnitConcentrationMass`, but kg/m³ is the base unit for density).
 public class UnitDensity: Dimension, EngineeringUnit {
-	
+
 	public static let allEngineeringUnits: [UnitDensity] = [.kilogramPerCubicMeter, .poundsPerCubicFoot]
 	
 	public static let kilogramPerCubicMeter = UnitDensity(symbol: "kg/m³", converter: UnitConverterLinear(coefficient: 1.0))
@@ -709,11 +709,11 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 					.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
 					.frame(width: geoReader.size.width/3)
 				Menu {
-					ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
+					ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
 						Button {
 							measurement.convert(to: unit as! EngrUnitType)
 						} label: {
-							Text(unit.symbol).tag(unit.symbol)
+							Text(unit.symbol).tag(unit)
 						}
 					}
 				} label: {
@@ -730,12 +730,16 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 				.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
 			Picker("\(description)", selection: $measurementUnit) {
-				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
-					HStack { Text(unit.symbol).tag(unit.symbol) }
+				ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
+					HStack { Text(unit.symbol).tag(unit) }
 				}
 			}
 			.onChange(of: measurementUnit) {
+				print("Old Measurement:")
+				print(measurement.formatted(measurementFormatStyle))
 				measurement.convert(to: measurementUnit)
+				print("New Measurement:")
+				print(measurement.formatted(measurementFormatStyle))
 			}
 			.macOS({$0.frame(width: 200)})
 		}
@@ -763,12 +767,16 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 			Spacer()
 			Text(measurement.value.formatted(sigFigs: ...4))
 			Picker("Unit", selection: $measurementUnit) {
-				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
+				ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
 					Text(unit.symbol).tag(unit)
 				}
 			}
 			.onChange(of: measurementUnit) { oldValue, newValue in
+				print("Old Measurement:")
+				print(measurement.formatted(measurementFormatStyle))
 				measurement.convert(to: newValue)
+				print("New Measurement:")
+				print(measurement.formatted(measurementFormatStyle))
 			}
 			.pickerStyle(.menu)
 			.macOS({$0.frame(width: 200)})
