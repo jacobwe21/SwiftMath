@@ -713,7 +713,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 						Button {
 							measurement.convert(to: unit as! EngrUnitType)
 						} label: {
-							Text(unit.symbol)
+							Text(unit.symbol).tag(unit.symbol)
 						}
 					}
 				} label: {
@@ -731,7 +731,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
 			Picker("\(description)", selection: $measurementUnit) {
 				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
-					HStack { Text(unit.symbol) }
+					HStack { Text(unit.symbol).tag(unit.symbol) }
 				}
 			}
 			.onChange(of: measurementUnit) {
@@ -763,7 +763,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 //			Text("\(measurement.formatted(measurementFormatStyle))")
 			Picker("\(measurement.formatted(measurementFormatStyle))", selection: $measurement) {
 				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
-					Text(unit.symbol)
+					Text(unit.symbol).tag(unit.symbol)
 				}
 			}.macOS({$0.frame(width: 200)})
 //			Menu {
@@ -771,7 +771,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 //					Button {
 //						measurement.convert(to: unit as! EngrUnitType)
 //					} label: {
-//						Text(unit.symbol)
+//						Text(unit.symbol).tag(unit.symbol)
 //					}
 //				}
 //			} label: {
