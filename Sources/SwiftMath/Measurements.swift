@@ -9,14 +9,19 @@ import Foundation
 import MySwift
 
 public protocol EngineeringUnit: Dimension {
-	associatedtype EngDimension: Dimension
+	associatedtype EngDimension: EngineeringUnit
 	static var allEngineeringUnits: [EngDimension] { get }
 	static var allEngineeringUnitSymbols: [String] { get }
+	static var allImperialEngineeringUnitSymbols: [String] { get }
+	static var allSIEngineeringUnitSymbols: [String] { get }
 	var positiveOnly: Bool { get }
+	var isImperial: Bool { get }
 }
 public extension EngineeringUnit {
 	var positiveOnly: Bool { false }
 	static var allEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
+	static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({$0.isImperial}).map({$0.symbol}) }
+	static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({!$0.isImperial}).map({$0.symbol}) }
 }
 
 ///  The inverse (1/x) of `UnitTemperature`
@@ -156,7 +161,8 @@ public class UnitWork: Dimension, EngineeringUnit {
 	}
 }
 extension UnitLength: EngineeringUnit {
-	public static let allEngineeringUnits: [UnitLength] = [.kilometers,.meters,.centimeters,.millimeters,.miles,.yards,.feet,.inches]
+	public static let allEngineeringUnits: [UnitLength] = [.meters,.centimeters,.millimeters,.feet,.inches]
+//	public static let allEngineeringUnits: [UnitLength] = [.kilometers,.meters,.centimeters,.millimeters,.miles,.yards,.feet,.inches]
 	
 	public var isImperial: Bool {
 		if self ==|| [.inches,.feet,.yards,.miles,.furlongs,.fathoms] {
@@ -177,7 +183,8 @@ public extension Measurement where UnitType: UnitLength {
 }
 
 extension UnitArea: EngineeringUnit {
-	public static let allEngineeringUnits: [UnitArea] = [.squareKilometers,.squareMeters,.squareCentimeters,.squareMillimeters,.squareMiles,.squareYards,.squareFeet,.squareInches]
+	public static let allEngineeringUnits: [UnitArea] = [.squareMeters,.squareCentimeters,.squareMillimeters,.squareFeet,.squareInches]
+//	public static let allEngineeringUnits: [UnitArea] = [.squareKilometers,.squareMeters,.squareCentimeters,.squareMillimeters,.squareMiles,.squareYards,.squareFeet,.squareInches]
 	
 	/// The unit that results by taking the square root of a UnitArea unit.
 	var linearBaseUnit: UnitLength? {
@@ -216,7 +223,8 @@ public extension Measurement where UnitType: UnitArea {
 }
 
 extension UnitVolume: EngineeringUnit {
-	public static let allEngineeringUnits: [UnitVolume] = [.cubicMeters,.cubicCentimeters,.cubicMillimeters,.cubicYards,.cubicFeet,.cubicInches,.gallons,.liters]
+	public static let allEngineeringUnits: [UnitVolume] = [.cubicMeters,.cubicCentimeters,.cubicMillimeters,.cubicFeet,.cubicInches]
+//	public static let allEngineeringUnits: [UnitVolume] = [.cubicMeters,.cubicCentimeters,.cubicMillimeters,.cubicYards,.cubicFeet,.cubicInches,.gallons,.liters]
 	public var isImperial: Bool {
 		if self ==|| [.acreFeet,.bushels,.cubicFeet,.cubicInches,.cubicMiles,.cubicYards,.cups,.imperialFluidOunces,.imperialPints,.imperialQuarts,.imperialGallons,.imperialTeaspoons,.imperialTablespoons] {
 			return true
@@ -694,6 +702,10 @@ public extension Measurement3D {
 
 public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
 	
+	public enum UnitSystem: String {
+		case imperial, SI
+	}
+	
 	@Environment(\.deviceOS) var os
 	let description: String
 	@Binding var measurement: Measurement<EngrUnitType>
@@ -709,14 +721,16 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	let maxValue: Measurement<EngrUnitType>?
 	@FocusState var thisMeasurementIsFocused: Bool
 	let positiveOnly: Bool
+	let allowedUnitSystems: [UnitSystem]
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		self.minValue = minValue
 		self.maxValue = maxValue
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		self.positiveOnly = positiveOnly
+		self.allowedUnitSystems = allowedUnits
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -735,8 +749,15 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 					}
 				}
 			Picker("Unit for \(description)", selection: $measurementUnit) {
-				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
-					Text(unitSymbol).tag(unitSymbol)
+				if allowedUnitSystems.contains(.imperial) {
+					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
+				}
+				if allowedUnitSystems.contains(.SI) {
+					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
 				}
 			}
 			.onChange(of: measurementUnit) {
@@ -767,15 +788,21 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 }
 public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
 	
+	public enum UnitSystem: String {
+		case imperial, SI
+	}
+	
 	@Environment(\.deviceOS) var os
 	let description: String
 	@State var measurement: Measurement<EngrUnitType>
 	@State private var measurementUnit: String
+	let allowedUnitSystems: [UnitSystem]
 	
-	public init(_ description: String, _ measurement: Measurement<EngrUnitType>)  {
+	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem])  {
 		self.description = description
 		_measurement = State(initialValue: measurement)
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
+		self.allowedUnitSystems = allowedUnits
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -786,8 +813,15 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			Spacer()
 			Text(measurement.converted(to: getUnit()).value.formatted(sigFigs: ...4))
 			Picker("Unit for \(description)", selection: $measurementUnit) {
-				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
-					Text(unitSymbol).tag(unitSymbol)
+				if allowedUnitSystems.contains(.imperial) {
+					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
+				}
+				if allowedUnitSystems.contains(.SI) {
+					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
 				}
 			}
 			.onChange(of: measurementUnit) {
@@ -809,10 +843,10 @@ struct FieldsPreviews: PreviewProvider {
 	static var previews: some View {
 		ZStack {
 			VStack {
-				ENGRValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)))
+				ENGRValueField("Length", .constant(Measurement<UnitDensity>(value: 12, unit: .kilogramPerCubicMeter)), allowedUnits: [.imperial,.SI])
 					.padding()
 				Spacer()
-				ENGRValueDisplay("Length", Measurement<UnitDensity>(value: 12.0110010, unit: .kilogramPerCubicMeter))
+				ENGRValueDisplay("Length", Measurement<UnitDensity>(value: 12.0110010, unit: .kilogramPerCubicMeter), allowedUnits: [.imperial,.SI])
 					.padding()
 			}
 		}
