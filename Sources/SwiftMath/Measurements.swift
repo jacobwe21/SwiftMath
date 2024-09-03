@@ -698,6 +698,13 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	let description: String
 	@Binding var measurement: Measurement<EngrUnitType>
 	@State private var measurementUnit: String
+	var measurementValue: Binding<Double> {
+		Binding {
+			measurement.converted(to: getUnit()).value
+		} set: { newValue in
+			measurement = Measurement(value: newValue, unit: getUnit())
+		}
+	}
 	let minValue: Measurement<EngrUnitType>?
 	let maxValue: Measurement<EngrUnitType>?
 	@FocusState var thisMeasurementIsFocused: Bool
@@ -715,46 +722,10 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
 	
 	public var body: some View {
-		#if os(macOS)
-		GeometryReader { geoReader in
-			HStack {
-				Text("\(description)")
-				Spacer()
-				TextField(description, value: $measurement.value, format: .number)
-					.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
-					.frame(width: geoReader.size.width/3)
-					.focused($thisMeasurementIsFocused)
-					.onChange(of: measurement) {
-						if measurement.value < 0 && positiveOnly {
-							measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
-						}
-					}
-				Menu {
-					ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
-						Button {
-							measurement = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
-						} label: {
-							Text(unit.symbol).tag(unit)
-						}
-					}
-				} label: {
-					Text(measurement.unit.symbol)
-				}
-				.macOS({$0.frame(width: 70)})
-			}
-			.toolbar {
-				if thisMeasurementIsFocused {
-					ToolbarItem(placement: .keyboard) {
-						Button("Done", action: {thisMeasurementIsFocused = false})
-					}
-				}
-			}
-		}
-		#else
 		HStack {
 			Text("\(description)")
 			Spacer()
-			TextField(description, value: $measurement.value, format: .number)
+			TextField(description, value: measurementValue, format: .number)
 				.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
 				.focused($thisMeasurementIsFocused)
@@ -787,7 +758,6 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				}
 			}
 		}
-		#endif
 	}
 	
 	func getUnit() -> EngrUnitType {
