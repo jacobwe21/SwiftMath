@@ -11,6 +11,10 @@ import MySwift
 public protocol EngineeringUnit: Dimension {
 	associatedtype EngDimension: Dimension
 	static var allEngineeringUnits: [EngDimension] { get }
+	var positiveOnly: Bool { get }
+}
+public extension EngineeringUnit {
+	var positiveOnly: Bool { false }
 }
 
 ///  The inverse (1/x) of `UnitTemperature`
@@ -30,6 +34,7 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 			return true
 		} else { return false }
 	}
+	public var positiveOnly: Bool { self == .inverseKelvin }
 	
 	class UnitConverterInverting: UnitConverter {
 		var coefficient: Double
@@ -74,6 +79,8 @@ public class UnitDensity: Dimension, EngineeringUnit {
 	public override class func baseUnit() -> Self {
 		return UnitDensity.kilogramPerCubicMeter as! Self
 	}
+	
+	public var positiveOnly: Bool { true }
 	
 	public var isImperial: Bool {
 		if self ==|| [.poundsPerCubicFoot] {
@@ -275,6 +282,9 @@ extension UnitPressure: EngineeringUnit {
 }
 extension UnitTemperature: EngineeringUnit {
 	public static let allEngineeringUnits: [UnitTemperature] = [.celsius,.fahrenheit,.kelvin]
+	
+	public var positiveOnly: Bool { self == .kelvin }
+	
 	public var isImperial: Bool {
 		if self == .fahrenheit {
 			return true
@@ -688,13 +698,16 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 	@State private var measurementUnit: EngrUnitType
 	let minValue: Measurement<EngrUnitType>?
 	let maxValue: Measurement<EngrUnitType>?
+	@FocusState var keypadShown: Bool
+	let positiveOnly: Bool
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		self.minValue = minValue
 		self.maxValue = maxValue
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit)
+		self.positiveOnly = positiveOnly
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -708,6 +721,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 				TextField(description, value: $measurement.value, format: .number)
 					.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
 					.frame(width: geoReader.size.width/3)
+					.focused($keypadShown)
 				Menu {
 					ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
 						Button {
@@ -737,11 +751,28 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 			.onChange(of: measurementUnit) {
 				print("Old Measurement:")
 				print(measurement.formatted(measurementFormatStyle))
+				print(measurement)
+				let m = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
 				measurement.convert(to: measurementUnit)
-				print("New Measurement:")
+				print("New Measurements:")
 				print(measurement.formatted(measurementFormatStyle))
+				print(measurement)
+				print(m.formatted(measurementFormatStyle))
+				print(m)
 			}
 			.macOS({$0.frame(width: 200)})
+		}
+		.toolbar {
+			if !measurement.unit.positiveOnly && !positiveOnly {
+				ToolbarItem(placement: .keyboard) {
+					Button("Negate", systemImage: "plus.forwardslash.minus") {
+						measurement = Measurement(value: -measurement.value, unit: measurement.unit)
+					}
+				}
+			}
+			ToolbarItem(placement: .keyboard) {
+				Button("Done", action: {keypadShown = false})
+			}
 		}
 		#endif
 	}
