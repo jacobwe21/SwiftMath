@@ -703,7 +703,7 @@ public extension Measurement3D {
 public enum UnitSystem: String, CaseIterable, Identifiable, Hashable {
 	case imperial = "Imperial", SI = "SI"
 	public var id: String { rawValue }
-	static func selection(for storedData: String) -> [UnitSystem] {
+	public static func selection(for storedData: String) -> [UnitSystem] {
 		if storedData == "all" { return UnitSystem.allCases }
 		if storedData == "Imperial" { return [.imperial] }
 		if storedData == "SI" { return [.SI] }
