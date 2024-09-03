@@ -700,9 +700,20 @@ public extension Measurement3D {
 	}
 }
 
-public enum UnitSystem: String, CaseIterable, Identifiable {
-	case imperial, SI
+public enum UnitSystem: String, CaseIterable, Identifiable, Hashable {
+	case imperial = "Imperial", SI = "SI"
 	public var id: String { rawValue }
+	static func selection(for storedData: String) -> [UnitSystem] {
+		if storedData == "all" { return UnitSystem.allCases }
+		if storedData == "Imperial" { return [.imperial] }
+		if storedData == "SI" { return [.SI] }
+		else { return [.imperial] }
+	}
+}
+public extension Array where Element == UnitSystem {
+	var storedDataString: String {
+		if self.count > 1 { "all" } else if self.count == 1 { self.first!.rawValue } else { "Imperial" }
+	}
 }
 
 public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
