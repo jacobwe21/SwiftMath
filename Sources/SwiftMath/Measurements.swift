@@ -11,10 +11,12 @@ import MySwift
 public protocol EngineeringUnit: Dimension {
 	associatedtype EngDimension: Dimension
 	static var allEngineeringUnits: [EngDimension] { get }
+	static var allEngineeringUnitSymbols: [String] { get }
 	var positiveOnly: Bool { get }
 }
 public extension EngineeringUnit {
 	var positiveOnly: Bool { false }
+	static var allEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
 }
 
 ///  The inverse (1/x) of `UnitTemperature`
@@ -788,17 +790,17 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 		#endif
 	}
 }
-public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
+public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
 	
 	@Environment(\.deviceOS) var os
 	let description: String
 	@State var measurement: Measurement<EngrUnitType>
-	@State private var measurementUnit: EngrUnitType
+	@State private var measurementUnit: String
 	
 	public init(_ description: String, _ measurement: Measurement<EngrUnitType>)  {
 		self.description = description
 		_measurement = State(initialValue: measurement)
-		_measurementUnit = State(initialValue: measurement.unit)
+		_measurementUnit = State(initialValue: measurement.unit.symbol)
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -809,12 +811,25 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 			Spacer()
 			Text(measurement.value.formatted(sigFigs: ...4))
 			Picker("Unit", selection: $measurementUnit) {
-				ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
-					Text(unit.symbol).tag(unit)
+				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
+					Text(unitSymbol).tag(unitSymbol)
 				}
 			}
-			.onChange(of: measurementUnit) {
-				measurement = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
+			.onChange(of: measurementUnit) { oldValue, newValue in
+				print("Current Measurement:")
+				print(measurement)
+				print("old unit: \(oldValue)")
+				print("new unit: \(newValue) or \(measurementUnit)")
+				let unitIndex = EngrUnitType.allEngineeringUnitSymbols.firstIndex(of: measurementUnit)!
+				let unit = EngrUnitType.allEngineeringUnits[unitIndex]
+				let new = measurement.converted(to: unit).value
+				print("New Measurement Value:")
+				print(new)
+				let m = Measurement(value: new, unit: unit)
+				print("New Measurement:")
+				print(m)
+				measurement = m
+				print(measurement)
 			}
 			.pickerStyle(.menu)
 			.macOS({$0.frame(width: 200)})
