@@ -93,7 +93,7 @@ public class UnitDensity: Dimension, EngineeringUnit {
 ///  A unit of measure for force
 public class UnitForce: Dimension, EngineeringUnit {
 	public static let newton = UnitForce(symbol: "N", converter: UnitConverterLinear(coefficient: 1.0))
-	public static let kilonewton = UnitForce(symbol: "kN", converter: UnitConverterLinear(coefficient: 0.001))
+	public static let kilonewton = UnitForce(symbol: "kN", converter: UnitConverterLinear(coefficient: 1000))
 	public static let pound = UnitForce(symbol: "lb", converter: UnitConverterLinear(coefficient: 0.22480894244318786))
 	public static let kip = UnitForce(symbol: "k", converter: UnitConverterLinear(coefficient: 224.80894244318786))
 	
@@ -111,7 +111,7 @@ public class UnitForce: Dimension, EngineeringUnit {
 ///  A unit of measure for force distributed over a linear area
 public class UnitLinearForce: Dimension, EngineeringUnit {
 	public static let newtonsPerMeter = UnitLinearForce(symbol: "N/m", converter: UnitConverterLinear(coefficient: 1.0))
-	public static let kilonewtonsPerMeter = UnitLinearForce(symbol: "kN/m", converter: UnitConverterLinear(coefficient: 0.001))
+	public static let kilonewtonsPerMeter = UnitLinearForce(symbol: "kN/m", converter: UnitConverterLinear(coefficient: 1000))
 	public static let newtonsPerCentimeter = UnitLinearForce(symbol: "N/cm", converter: UnitConverterLinear(coefficient: 100.0))
 	public static let newtonsPerMillimeter = UnitLinearForce(symbol: "N/mm", converter: UnitConverterLinear(coefficient: 1000.0))
 	public static let kilonewtonsPerMillimeter = UnitLinearForce(symbol: "kN/mm", converter: UnitConverterLinear(coefficient: 1_000_000.0))
@@ -775,14 +775,13 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 		}
 		.toolbar {
 			if thisMeasurementIsFocused {
-				if !measurement.unit.positiveOnly && !positiveOnly {
-					ToolbarItem(placement: .keyboard) {
+				ToolbarItemGroup(placement: .keyboard) {
+					if !measurement.unit.positiveOnly && !positiveOnly {
 						Button("Negate", systemImage: "plus.forwardslash.minus") {
 							measurement = Measurement(value: -measurement.value, unit: measurement.unit)
 						}
 					}
-				}
-				ToolbarItem(placement: .keyboard) {
+					Spacer()
 					Button("Done", action: {thisMeasurementIsFocused = false})
 				}
 			}
@@ -815,20 +814,15 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 					Text(unitSymbol).tag(unitSymbol)
 				}
 			}
-			.onChange(of: measurementUnit) { oldValue, newValue in
+			.onChange(of: measurementUnit) {
 				print("Current Measurement:")
 				print(measurement)
-				print("old unit: \(oldValue)")
-				print("new unit: \(newValue) or \(measurementUnit)")
 				let unitIndex = EngrUnitType.allEngineeringUnitSymbols.firstIndex(of: measurementUnit)!
 				let unit = EngrUnitType.allEngineeringUnits[unitIndex]
-				let new = measurement.converted(to: unit).value
-				print("New Measurement Value:")
-				print(new)
-				let m = Measurement(value: new, unit: unit)
+				let m = Measurement(value: measurement.converted(to: unit).value, unit: unit)
 				print("New Measurement:")
 				print(m)
-				measurement = m
+				measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
 				print(measurement)
 			}
 			.pickerStyle(.menu)
