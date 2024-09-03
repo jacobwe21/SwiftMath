@@ -698,7 +698,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 	@State private var measurementUnit: EngrUnitType
 	let minValue: Measurement<EngrUnitType>?
 	let maxValue: Measurement<EngrUnitType>?
-	@FocusState var keypadShown: Bool
+	@FocusState var thisMeasurementIsFocused: Bool
 	let positiveOnly: Bool
 	
 	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
@@ -721,7 +721,12 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 				TextField(description, value: $measurement.value, format: .number)
 					.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
 					.frame(width: geoReader.size.width/3)
-					.focused($keypadShown)
+					.focused($thisMeasurementIsFocused)
+					.onChange(of: measurement) {
+						if measurement.value < 0 && positiveOnly {
+							measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
+						}
+					}
 				Menu {
 					ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
 						Button {
@@ -735,6 +740,13 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 				}
 				.macOS({$0.frame(width: 70)})
 			}
+			.toolbar {
+				if thisMeasurementIsFocused {
+					ToolbarItem(placement: .keyboard) {
+						Button("Done", action: {thisMeasurementIsFocused = false})
+					}
+				}
+			}
 		}
 		#else
 		HStack {
@@ -743,6 +755,12 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 			TextField(description, value: $measurement.value, format: .number)
 				.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
+				.focused($thisMeasurementIsFocused)
+				.onChange(of: measurement) {
+					if measurement.value < 0 && positiveOnly {
+						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
+					}
+				}
 			Picker("\(description)", selection: $measurementUnit) {
 				ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
 					HStack { Text(unit.symbol).tag(unit) }
@@ -763,15 +781,17 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 			.macOS({$0.frame(width: 200)})
 		}
 		.toolbar {
-			if !measurement.unit.positiveOnly && !positiveOnly {
-				ToolbarItem(placement: .keyboard) {
-					Button("Negate", systemImage: "plus.forwardslash.minus") {
-						measurement = Measurement(value: -measurement.value, unit: measurement.unit)
+			if thisMeasurementIsFocused {
+				if !measurement.unit.positiveOnly && !positiveOnly {
+					ToolbarItem(placement: .keyboard) {
+						Button("Negate", systemImage: "plus.forwardslash.minus") {
+							measurement = Measurement(value: -measurement.value, unit: measurement.unit)
+						}
 					}
 				}
-			}
-			ToolbarItem(placement: .keyboard) {
-				Button("Done", action: {keypadShown = false})
+				ToolbarItem(placement: .keyboard) {
+					Button("Done", action: {thisMeasurementIsFocused = false})
+				}
 			}
 		}
 		#endif
@@ -802,12 +822,17 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 					Text(unit.symbol).tag(unit)
 				}
 			}
-			.onChange(of: measurementUnit) { oldValue, newValue in
+			.onChange(of: measurementUnit) {
 				print("Old Measurement:")
 				print(measurement.formatted(measurementFormatStyle))
-				measurement.convert(to: newValue)
-				print("New Measurement:")
+				print(measurement)
+				let m = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
+				measurement.convert(to: measurementUnit)
+				print("New Measurements:")
 				print(measurement.formatted(measurementFormatStyle))
+				print(measurement)
+				print(m.formatted(measurementFormatStyle))
+				print(m)
 			}
 			.pickerStyle(.menu)
 			.macOS({$0.frame(width: 200)})
