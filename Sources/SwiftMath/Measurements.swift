@@ -692,12 +692,12 @@ public extension Measurement3D {
 	}
 }
 
-public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
+public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
 	
 	@Environment(\.deviceOS) var os
 	let description: String
 	@Binding var measurement: Measurement<EngrUnitType>
-	@State private var measurementUnit: EngrUnitType
+	@State private var measurementUnit: String
 	let minValue: Measurement<EngrUnitType>?
 	let maxValue: Measurement<EngrUnitType>?
 	@FocusState var thisMeasurementIsFocused: Bool
@@ -708,7 +708,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 		_measurement = measurement
 		self.minValue = minValue
 		self.maxValue = maxValue
-		_measurementUnit = State(initialValue: measurement.wrappedValue.unit)
+		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		self.positiveOnly = positiveOnly
 	}
 	
@@ -763,13 +763,14 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
 				}
-			Picker("\(description)", selection: $measurementUnit) {
-				ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
-					HStack { Text(unit.symbol).tag(unit) }
+			Picker("Unit for \(description)", selection: $measurementUnit) {
+				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
+					Text(unitSymbol).tag(unitSymbol)
 				}
 			}
 			.onChange(of: measurementUnit) {
-				measurement = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
+				let unit = getUnit()
+				measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit)
 			}
 			.macOS({$0.frame(width: 200)})
 		}
@@ -787,6 +788,11 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 			}
 		}
 		#endif
+	}
+	
+	func getUnit() -> EngrUnitType {
+		let unitIndex = EngrUnitType.allEngineeringUnitSymbols.firstIndex(of: measurementUnit)!
+		return EngrUnitType.allEngineeringUnits[unitIndex]
 	}
 }
 public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
@@ -808,38 +814,24 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		HStack {
 			Text("\(description)")
 			Spacer()
-			Text(measurement.value.formatted(sigFigs: ...4))
-			Picker("Unit", selection: $measurementUnit) {
+			Text(measurement.converted(to: getUnit()).value.formatted(sigFigs: ...4))
+			Picker("Unit for \(description)", selection: $measurementUnit) {
 				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
 					Text(unitSymbol).tag(unitSymbol)
 				}
 			}
 			.onChange(of: measurementUnit) {
-				print("Current Measurement:")
-				print(measurement)
-				let unitIndex = EngrUnitType.allEngineeringUnitSymbols.firstIndex(of: measurementUnit)!
-				let unit = EngrUnitType.allEngineeringUnits[unitIndex]
-				let m = Measurement(value: measurement.converted(to: unit).value, unit: unit)
-				print("New Measurement:")
-				print(m)
-				measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
-				print(measurement)
+				let unit = getUnit()
+				measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit)
 			}
 			.pickerStyle(.menu)
 			.macOS({$0.frame(width: 200)})
-//			Menu {
-//				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
-//					Button {
-//						measurement = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
-//					} label: {
-//						Text(unit.symbol).tag(unit.symbol)
-//					}
-//				}
-//			} label: {
-//				Text(measurement.unit.symbol)
-//			}
-//			.macOS({$0.frame(width: 70)})
 		}
+	}
+	
+	func getUnit() -> EngrUnitType {
+		let unitIndex = EngrUnitType.allEngineeringUnitSymbols.firstIndex(of: measurementUnit)!
+		return EngrUnitType.allEngineeringUnits[unitIndex]
 	}
 }
 
