@@ -718,6 +718,7 @@ public extension Array where Element == UnitSystem {
 
 public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
 	
+	
 	@Environment(\.deviceOS) var os
 	let description: String
 	@Binding var measurement: Measurement<EngrUnitType>
@@ -733,16 +734,16 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	let maxValue: Measurement<EngrUnitType>?
 	@FocusState var thisMeasurementIsFocused: Bool
 	let positiveOnly: Bool
-	let allowedUnitSystems: [UnitSystem]
+	var allowedUnitSystems: [UnitSystem]
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem]? = nil, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		self.minValue = minValue
 		self.maxValue = maxValue
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		self.positiveOnly = positiveOnly
-		self.allowedUnitSystems = allowedUnits
+		self.allowedUnitSystems = allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -806,11 +807,11 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	@State private var measurementUnit: String
 	let allowedUnitSystems: [UnitSystem]
 	
-	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem])  {
+	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem]? = nil)  {
 		self.description = description
 		_measurement = State(initialValue: measurement)
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
-		self.allowedUnitSystems = allowedUnits
+		self.allowedUnitSystems = allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
