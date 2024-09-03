@@ -730,7 +730,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 				Menu {
 					ForEach(EngrUnitType.allEngineeringUnits, id: \.symbol) { unit in
 						Button {
-							measurement.convert(to: unit as! EngrUnitType)
+							measurement = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
 						} label: {
 							Text(unit.symbol).tag(unit)
 						}
@@ -767,16 +767,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View {
 				}
 			}
 			.onChange(of: measurementUnit) {
-				print("Old Measurement:")
-				print(measurement.formatted(measurementFormatStyle))
-				print(measurement)
-				let m = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
-				measurement.convert(to: measurementUnit)
-				print("New Measurements:")
-				print(measurement.formatted(measurementFormatStyle))
-				print(measurement)
-				print(m.formatted(measurementFormatStyle))
-				print(m)
+				measurement = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
 			}
 			.macOS({$0.frame(width: 200)})
 		}
@@ -823,23 +814,14 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View {
 				}
 			}
 			.onChange(of: measurementUnit) {
-				print("Old Measurement:")
-				print(measurement.formatted(measurementFormatStyle))
-				print(measurement)
-				let m = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
-				measurement.convert(to: measurementUnit)
-				print("New Measurements:")
-				print(measurement.formatted(measurementFormatStyle))
-				print(measurement)
-				print(m.formatted(measurementFormatStyle))
-				print(m)
+				measurement = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
 			}
 			.pickerStyle(.menu)
 			.macOS({$0.frame(width: 200)})
 //			Menu {
 //				ForEach(type(of: measurement.unit).allEngineeringUnits, id: \.symbol) { unit in
 //					Button {
-//						measurement.convert(to: unit as! EngrUnitType)
+//						measurement = Measurement(value: measurement.converted(to:measurementUnit).value, unit: measurementUnit)
 //					} label: {
 //						Text(unit.symbol).tag(unit.symbol)
 //					}
