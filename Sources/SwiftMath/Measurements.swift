@@ -700,11 +700,12 @@ public extension Measurement3D {
 	}
 }
 
+public enum UnitSystem: String, CaseIterable, Identifiable {
+	case imperial, SI
+	public var id: String { rawValue }
+}
+
 public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
-	
-	public enum UnitSystem: String {
-		case imperial, SI
-	}
 	
 	@Environment(\.deviceOS) var os
 	let description: String
@@ -787,10 +788,6 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	}
 }
 public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
-	
-	public enum UnitSystem: String {
-		case imperial, SI
-	}
 	
 	@Environment(\.deviceOS) var os
 	let description: String
