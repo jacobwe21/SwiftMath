@@ -285,7 +285,7 @@ extension UnitPressure: EngineeringUnit {
 	public static let poundsForcePerSquareFoot = UnitPressure(symbol: "psf", converter: UnitConverterLinear(coefficient: 0.0208854342))
 	public static let allEngineeringUnits: [UnitPressure] = [.gigapascals,.megapascals,.kilopascals,.newtonsPerMetersSquared,.kipsPerSquareInch,.poundsForcePerSquareFoot,.poundsForcePerSquareInch]
 	public var isImperial: Bool {
-		if self ==|| [.inchesOfMercury,.poundsForcePerSquareInch,.bars,.millibars] {
+		if self ==|| [.inchesOfMercury,.poundsForcePerSquareInch,.kipsPerSquareInch,.poundsForcePerSquareFoot,.bars,.millibars] {
 			return true
 		} else { return false }
 	}
