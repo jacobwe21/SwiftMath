@@ -1,4 +1,4 @@
-# SwiftMath
+# MySwiftMath
 This is a package of helpful mathematical additions to the Swift Foundation .
 
 ## Measurements
