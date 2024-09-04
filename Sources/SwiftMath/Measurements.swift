@@ -753,7 +753,10 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			Text("\(description)")
 			Spacer()
 			TextField(description, value: measurementValue, format: .number)
-				.textFieldStyle(.roundedBorder).keyboardType(.decimalPad)
+				.textFieldStyle(.roundedBorder)
+#if !os(macOS)
+				.keyboardType(.decimalPad)
+#endif
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
 				.focused($thisMeasurementIsFocused)
 				.onChange(of: measurement) {
