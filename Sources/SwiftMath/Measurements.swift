@@ -780,7 +780,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				let unit = getUnit()
 				measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit)
 			}
-			.macOS({$0.frame(width: 200)})
+			.macOS({$0.frame(width: 300)})
 		}
 		.toolbar {
 			if thisMeasurementIsFocused {
@@ -821,7 +821,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	
 	public var body: some View {
 		HStack {
-			Text("\(description)")
+			Text(description)
 			Spacer()
 			Text(measurement.converted(to: getUnit()).value.formatted(sigFigs: ...4))
 			Picker("Unit for \(description)", selection: $measurementUnit) {
@@ -841,7 +841,52 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 				measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit)
 			}
 			.pickerStyle(.menu)
-			.macOS({$0.frame(width: 200)})
+			.macOS({$0.frame(width: 300)})
+		}
+	}
+	
+	func getUnit() -> EngrUnitType {
+		let unitIndex = EngrUnitType.allEngineeringUnitSymbols.firstIndex(of: measurementUnit)!
+		return EngrUnitType.allEngineeringUnits[unitIndex]
+	}
+}
+public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
+	
+	let description: String
+	@Binding var unit: EngrUnitType
+	@State private var measurementUnit: String
+	let allowedUnitSystems: [UnitSystem]
+	
+	public init(_ description: String, unit: Binding<EngrUnitType>, allowedUnits: [UnitSystem]? = nil)  {
+		self.description = description
+		_unit = unit
+		_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
+		self.allowedUnitSystems = allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+	}
+	
+	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
+	
+	public var body: some View {
+		HStack {
+			Text(description)
+			Spacer()
+			Picker(description, selection: $measurementUnit) {
+				if allowedUnitSystems.contains(.imperial) {
+					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
+				}
+				if allowedUnitSystems.contains(.SI) {
+					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
+				}
+			}
+			.onChange(of: measurementUnit) {
+				unit = getUnit()
+			}
+			.pickerStyle(.menu)
+			.macOS({$0.frame(width: 300)})
 		}
 	}
 	
