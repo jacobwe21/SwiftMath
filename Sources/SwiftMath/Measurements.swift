@@ -301,6 +301,12 @@ extension UnitTemperature: EngineeringUnit {
 		} else { return false }
 	}
 }
+extension UnitAngle: EngineeringUnit {
+	public var isImperial: Bool { self == UnitAngle.degrees }
+	public static let allEngineeringUnits: [UnitAngle] = [.radians,.gradians,.degrees,.revolutions]
+	public static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
+	public static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
+}
 
 public extension Measurement {
 	
