@@ -36,7 +36,7 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 //		return UnitInverseTemperature.inverseKelvin as! Self
 //	}
 	
-	public var supportsSecureCoding: Bool = true
+	override public static var supportsSecureCoding: Bool { true }
 	public var isImperial: Bool {
 		if self ==|| [.inverseFahrenheit] {
 			return true
@@ -87,7 +87,7 @@ public class UnitDensity: Dimension, EngineeringUnit {
 	public override class func baseUnit() -> Self {
 		return UnitDensity.kilogramPerCubicMeter as! Self
 	}
-	
+	override public static var supportsSecureCoding: Bool { true }
 	public var positiveOnly: Bool { true }
 	
 	public var isImperial: Bool {
@@ -131,7 +131,7 @@ public class UnitLinearForce: Dimension, EngineeringUnit {
 		return UnitLinearForce.newtonsPerMeter as! Self
 	}
 	public static let allEngineeringUnits: [UnitLinearForce] = [.newtonsPerMeter,.kilonewtonsPerMeter,.newtonsPerCentimeter,.newtonsPerMillimeter,.kilonewtonsPerMillimeter,.poundsPerFoot,.poundsPerInch,.kipsPerFoot,.kipsPerInch]
-	
+	override public static var supportsSecureCoding: Bool { true }
 	public var isImperial: Bool {
 		if self ==|| [.poundsPerFoot,.poundsPerInch,.kipsPerInch,.kipsPerFoot] {
 			return true
@@ -154,7 +154,7 @@ public class UnitWork: Dimension, EngineeringUnit {
 		return UnitWork.newtonMeters as! Self
 	}
 	public static let allEngineeringUnits: [UnitWork] = [ .newtonMeters, .newtonCentimeters, .newtonMillimeters, .kilonewtonMeters, .poundFeet, .kipFeet, .kipInches, .poundInches]
-	
+	override public static var supportsSecureCoding: Bool { true }
 	public var isImperial: Bool {
 		if self ==|| [.poundFeet,.poundInches,.kipInches,.kipFeet] {
 			return true
@@ -244,7 +244,7 @@ public class UnitTesseract: Dimension, EngineeringUnit {
 		return UnitTesseract.tesseractMeters as! Self
 	}
 	public static let allEngineeringUnits: [UnitTesseract] = [.tesseractMeters,.tesseractCentimeters,.tesseractMillimeters,.tesseractFeet,.tesseractInches]
-	
+	override public static var supportsSecureCoding: Bool { true }
 	public var isImperial: Bool {
 		if self ==|| [.tesseractFeet,.tesseractInches] {
 			return true
