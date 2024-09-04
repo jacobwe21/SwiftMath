@@ -874,8 +874,8 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 	
 	public var body: some View {
 		HStack {
-			Text(description)
-			Spacer()
+//			Text(description)
+//			Spacer()
 			Picker(description, selection: $measurementUnit) {
 				if allowedUnitSystems.contains(.imperial) {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
