@@ -19,6 +19,7 @@ public protocol EngineeringUnit: Dimension {
 }
 public extension EngineeringUnit {
 	var positiveOnly: Bool { false }
+	var supportsSecureCoding: Bool { true }
 	static var allEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
 	static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({$0.isImperial}).map({$0.symbol}) }
 	static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({!$0.isImperial}).map({$0.symbol}) }

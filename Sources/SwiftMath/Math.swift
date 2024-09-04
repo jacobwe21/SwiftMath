@@ -79,11 +79,11 @@ public struct Math {
 		}
 		
 		public var description: String {
-			var str = "{/n"
+			var str = "{\n"
 			for s in segments {
 				str += s.eq.description + ", [\(s.xStart),\(s.xEnd)] \n"
 			}
-			return str+"/n}"
+			return str+"\n}"
 		}
 	}
 	
