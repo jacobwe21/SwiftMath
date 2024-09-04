@@ -107,7 +107,7 @@ public class UnitForce: Dimension, EngineeringUnit {
 		return UnitForce.newton as! Self
 	}
 	public static let allEngineeringUnits: [UnitForce] = [.newton,.pound,.kip,.kilonewton]
-	public var supportsSecureCoding: Bool = true
+	override public static var supportsSecureCoding: Bool { true }
 	public var isImperial: Bool {
 		if self ==|| [.pound,.kip] {
 			return true
