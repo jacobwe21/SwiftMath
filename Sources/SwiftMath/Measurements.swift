@@ -19,7 +19,6 @@ public protocol EngineeringUnit: Dimension {
 }
 public extension EngineeringUnit {
 	var positiveOnly: Bool { false }
-	var supportsSecureCoding: Bool { true }
 	static var allEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
 	static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({$0.isImperial}).map({$0.symbol}) }
 	static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({!$0.isImperial}).map({$0.symbol}) }
@@ -37,6 +36,7 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 //		return UnitInverseTemperature.inverseKelvin as! Self
 //	}
 	
+	public var supportsSecureCoding: Bool = true
 	public var isImperial: Bool {
 		if self ==|| [.inverseFahrenheit] {
 			return true
@@ -107,7 +107,7 @@ public class UnitForce: Dimension, EngineeringUnit {
 		return UnitForce.newton as! Self
 	}
 	public static let allEngineeringUnits: [UnitForce] = [.newton,.pound,.kip,.kilonewton]
-	
+	public var supportsSecureCoding: Bool = true
 	public var isImperial: Bool {
 		if self ==|| [.pound,.kip] {
 			return true
