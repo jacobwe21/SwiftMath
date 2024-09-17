@@ -737,21 +737,28 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			measurement = Measurement(value: newValue, unit: getUnit())
 		}
 	}
-	let minValue: Measurement<EngrUnitType>?
-	let maxValue: Measurement<EngrUnitType>?
+	//let minValue: Measurement<EngrUnitType>?
+	//let maxValue: Measurement<EngrUnitType>?
 	@FocusState var thisMeasurementIsFocused: Bool
 	let positiveOnly: Bool
 	var allowedUnitSystems: [UnitSystem]
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem]? = nil, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem]? = nil, positiveOnly: Bool = false)  {
 		self.description = description
 		_measurement = measurement
-		self.minValue = minValue
-		self.maxValue = maxValue
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		self.positiveOnly = positiveOnly
 		self.allowedUnitSystems = allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
 	}
+//	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem]? = nil, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
+//		self.description = description
+//		_measurement = measurement
+//		self.minValue = minValue
+//		self.maxValue = maxValue
+//		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
+//		self.positiveOnly = positiveOnly
+//		self.allowedUnitSystems = allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+//	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
 	
