@@ -473,7 +473,7 @@ public extension Measurement where UnitType: Dimension {
 		Measurement(value: Swift.abs(self.value), unit: self.unit)
 	}
 }
-extension Measurement: AdditiveArithmetic where UnitType: Dimension {
+extension Measurement: @retroactive AdditiveArithmetic where UnitType: Dimension {
 	public static var zero: Measurement<UnitType> {
 		Self()
 	}
@@ -792,7 +792,8 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			}
 			.onChange(of: measurementUnit) {
 				let unit = getUnit()
-				measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit)
+				measurement = Measurement(value: measurement.value, unit: unit) // Just change units
+				//measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit) // Conversion Option
 			}
 			.macOS({$0.frame(width: 300)})
 		}
