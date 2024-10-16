@@ -179,4 +179,28 @@ public struct Math {
 			}
 		}
 	}
+	
+	public struct Impulse: MathEquation {
+		
+		public let term: Double
+		
+		public init(term: Double) {
+			self.term = term
+		}
+		
+		public func callAsFunction(_ x: Double) -> Double {
+			return term
+		}
+		
+		public func makeDerivative() -> MathEquation {
+			return Impulse(term: 0)
+		}
+		public func integrate(plus c: Double) -> MathEquation {
+			return BasicPolynomialEQ(terms: BasicPolynomialEQ.Term(term, xToThe: 0))
+		}
+		
+		public var description: String {
+			return "\(term) (impulse)"
+		}
+	}
 }
