@@ -141,7 +141,7 @@ public struct Math {
 		public func integrate(plus c: Double) -> MathEquation {
 			var newTerms = [Term]()
 			for term in terms {
-				if term.degree > 0 {
+				if term.degree >= 0 {
 					newTerms.append(Term(term.coefficient/(term.degree+1), xToTheDouble: term.degree+1))
 				}
 			}
