@@ -32,7 +32,16 @@ public extension Angle {
 
 
 // MARK: Accelerate
+// MARK: Accelerate
+public extension simd_double2 {
+	var magnitude: Double {
+		simd_length(self)
+	}
+}
 public extension simd_double3 {
+	var magnitude: Double {
+		simd_length(self)
+	}
 	/// Converts from `Double` to `Float`
 	var f: simd_float3 { SIMD3<Float>(self) }
 }
