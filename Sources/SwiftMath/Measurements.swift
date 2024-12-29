@@ -795,7 +795,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				measurement = Measurement(value: measurement.value, unit: unit) // Just change units
 				//measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit) // Conversion Option
 			}
-			.macOS({$0.frame(width: 300)})
+			.macOS({$0.frame(minWidth: 100, idealWidth: 200, maxWidth: 300)})
 		}
 		.toolbar {
 			if thisMeasurementIsFocused {
