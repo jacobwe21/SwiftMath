@@ -770,8 +770,10 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				.textFieldStyle(.roundedBorder)
 #if !os(macOS)
 				.keyboardType(.decimalPad)
+				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
+#else
+				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
 #endif
-				.frame(minWidth: 80, idealWidth: 100, maxWidth: 150)
 				.focused($thisMeasurementIsFocused)
 				.onChange(of: measurement) {
 					if measurement.value < 0 && positiveOnly {
@@ -796,7 +798,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				measurement = Measurement(value: measurement.value, unit: unit) // Just change units
 				//measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit) // Conversion Option
 			}
-			.frame(minWidth: 70, idealWidth: 100, maxWidth: 150)
+			.frame(minWidth: 70, idealWidth: 100, maxWidth: 120)
 #else
 			Picker("Unit for \(description)", selection: $measurementUnit) {
 				if allowedUnitSystems.contains(.imperial) {
@@ -815,6 +817,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				measurement = Measurement(value: measurement.value, unit: unit) // Just change units
 				//measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit) // Conversion Option
 			}
+			.frame(minWidth: 70, idealWidth: 100, maxWidth: 120)
 #endif
 		}
 		.toolbar {
