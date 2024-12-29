@@ -817,7 +817,6 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				measurement = Measurement(value: measurement.value, unit: unit) // Just change units
 				//measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit) // Conversion Option
 			}
-			.frame(minWidth: 70, idealWidth: 100, maxWidth: 120)
 #endif
 		}
 		.toolbar {
