@@ -771,7 +771,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 #if !os(macOS)
 				.keyboardType(.decimalPad)
 #endif
-				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
+				.frame(minWidth: 80, idealWidth: 100, maxWidth: 150)
 				.focused($thisMeasurementIsFocused)
 				.onChange(of: measurement) {
 					if measurement.value < 0 && positiveOnly {
@@ -796,8 +796,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				measurement = Measurement(value: measurement.value, unit: unit) // Just change units
 				//measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit) // Conversion Option
 			}
-			.padding(.leading)
-			.frame(minWidth: 100, idealWidth: 200, maxWidth: 300)
+			.frame(minWidth: 70, idealWidth: 100, maxWidth: 150)
 #else
 			Picker("Unit for \(description)", selection: $measurementUnit) {
 				if allowedUnitSystems.contains(.imperial) {
