@@ -778,10 +778,8 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
 				}
-				.padding(.trailing)
 #if os(macOS)
-			Spacer()
-			Picker("Unit:", selection: $measurementUnit) {
+			Picker("", selection: $measurementUnit) {
 				if allowedUnitSystems.contains(.imperial) {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
 						Text(unitSymbol).tag(unitSymbol)
@@ -818,7 +816,6 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				measurement = Measurement(value: measurement.value, unit: unit) // Just change units
 				//measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit) // Conversion Option
 			}
-			.padding(.leading)
 #endif
 		}
 		.toolbar {
