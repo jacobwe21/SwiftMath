@@ -828,7 +828,11 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 						}
 					}
 					Spacer()
-					Button("Done", action: {thisMeasurementIsFocused = false})
+					Button {
+						thisMeasurementIsFocused = false
+					} label: {
+						Text("Done").foregroundStyle(Color.accentColor)
+					}
 				}
 			}
 		}
