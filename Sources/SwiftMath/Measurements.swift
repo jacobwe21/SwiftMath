@@ -960,11 +960,17 @@ public struct FloatingPointMathParseableFormatStyle: ParseableFormatStyle {
 	
 	public struct MathParser: ParseStrategy {
 		public func parse(_ value: String) throws -> Double {
-			let expn = NSExpression(format:value)
-			if let result = expn.expressionValue(with: nil, context: nil) as? Double {
-				return result
-			} else {
-				print("Can't evaluate \(value) with NSExpression.")
+//			let expn = NSExpression(format:value)
+//			if let result = expn.expressionValue(with: nil, context: nil) as? Double {
+//				return result
+//			} else {
+//				print("Can't evaluate \(value) with NSExpression.")
+//				return try Double(value, format: .number)
+//			}
+			do {
+				let expression = try MathExpression(value)
+				return expression.evaluate()
+			} catch {
 				return try Double(value, format: .number)
 			}
 		}
