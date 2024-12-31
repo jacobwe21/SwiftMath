@@ -235,7 +235,6 @@ fileprivate extension MathFormula {
 fileprivate extension String {
 	func cleanMathExpression() -> String {
 		var str = self
-		str = str.replacingOccurrences(of: "-", with: "-")
 		str = str.replacingOccurrences(of: "֊", with: "-")
 		str = str.replacingOccurrences(of: "־", with: "-")
 		str = str.replacingOccurrences(of: "᠆", with: "-")
