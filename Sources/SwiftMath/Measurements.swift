@@ -769,7 +769,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			TextField(description, value: measurementValue, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
 #if !os(macOS)
-				.keyboardType(.decimalPad)
+				.keyboardType(.numbersAndPunctuation)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
 #else
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
