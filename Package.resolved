@@ -1,5 +1,5 @@
 {
-  "originHash" : "df51f177531456b74834742e86076dbb0d65031a1c452af9c11af6e3236a3662",
+  "originHash" : "26fbb3b3942f1cccb067a1d98f7aed93df5809b4400fd8b057c07b7837ebe39a",
   "pins" : [
     {
       "identity" : "myswift",
@@ -7,7 +7,7 @@
       "location" : "https://github.com/jacobwe21/MySwift",
       "state" : {
         "branch" : "main",
-        "revision" : "d75048e667751231a2322c7ae9b223aa50e3426c"
+        "revision" : "76a1386b8b79214dc69ed25855ede2d8be48816e"
       }
     }
   ],

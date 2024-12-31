@@ -766,7 +766,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		HStack {
 			Text("\(description)")
 			Spacer()
-			TextField(description, value: measurementValue, format: .number)
+			TextField(description, value: measurementValue, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
 #if !os(macOS)
 				.keyboardType(.decimalPad)
@@ -950,3 +950,26 @@ struct FieldsPreviews: PreviewProvider {
 		}
 	}
 }
+
+public struct FloatingPointMathParseableFormatStyle: ParseableFormatStyle {
+	
+	public var parseStrategy = MathParser()
+	public func format(_ value: Double) -> String {
+		value.formatted(.number)
+	}
+	
+	public struct MathParser: ParseStrategy {
+		public func parse(_ value: String) throws -> Double {
+			let expn = NSExpression(format:value)
+			if let result = expn.expressionValue(with: nil, context: nil) as? Double {
+				return result
+			} else {
+				print("Can't evaluate \(value) with NSExpression.")
+				return try Double(value, format: .number)
+			}
+		}
+	}
+}
+
+
+
