@@ -1,12 +1,10 @@
 //
-//  Math.swift
-//  
+//  Equations.swift
 //
 //  Created by Jacob W Esselstyn on 12/29/22.
 //
 
 import SwiftUI
-
 
 public protocol MathEquation: CustomStringConvertible {
 	func callAsFunction(_ x: Double) -> Double
