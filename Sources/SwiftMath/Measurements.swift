@@ -819,23 +819,23 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			}
 #endif
 		}
-		.toolbar {
-			if thisMeasurementIsFocused {
-				ToolbarItemGroup(placement: .keyboard) {
-					if !measurement.unit.positiveOnly && !positiveOnly {
-						Button("Negate", systemImage: "plus.forwardslash.minus") {
-							measurement = Measurement(value: -measurement.value, unit: measurement.unit)
-						}
-					}
-					Spacer()
-					Button {
-						thisMeasurementIsFocused = false
-					} label: {
-						Text("Done").foregroundStyle(Color.accentColor)
-					}
-				}
-			}
-		}
+//		.toolbar {
+//			if thisMeasurementIsFocused {
+//				ToolbarItemGroup(placement: .keyboard) {
+//					if !measurement.unit.positiveOnly && !positiveOnly {
+//						Button("Negate", systemImage: "plus.forwardslash.minus") {
+//							measurement = Measurement(value: -measurement.value, unit: measurement.unit)
+//						}
+//					}
+//					Spacer()
+//					Button {
+//						thisMeasurementIsFocused = false
+//					} label: {
+//						Text("Done").foregroundStyle(Color.accentColor)
+//					}
+//				}
+//			}
+//		}
 	}
 	
 	func getUnit() -> EngrUnitType {
