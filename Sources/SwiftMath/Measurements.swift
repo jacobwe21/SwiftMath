@@ -830,20 +830,20 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				}
 			}
 		}
-		.onAppear {
-			if !fixedUnitSystem {
-				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
-				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
-				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
-					if allowedUnitSystems == [.imperial] {
-						measurementUnit = defaultImperialUnitSymbol
-					}
-					if allowedUnitSystems == [.SI] {
-						measurementUnit = defaultSIUnitSymbol
-					}
-				}
-			}
-		}
+//		.onAppear {
+//			if !fixedUnitSystem {
+//				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+//				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
+//				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
+//					if allowedUnitSystems == [.imperial] {
+//						measurementUnit = defaultImperialUnitSymbol
+//					}
+//					if allowedUnitSystems == [.SI] {
+//						measurementUnit = defaultSIUnitSymbol
+//					}
+//				}
+//			}
+//		}
 //		.toolbar {
 //			if thisMeasurementIsFocused {
 //				ToolbarItemGroup(placement: .keyboard) {
@@ -936,20 +936,20 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 				}
 			}
 		}
-		.onAppear {
-			if !fixedUnitSystem {
-				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
-				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
-				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
-					if allowedUnitSystems == [.imperial] {
-						measurementUnit = defaultImperialUnitSymbol
-					}
-					if allowedUnitSystems == [.SI] {
-						measurementUnit = defaultSIUnitSymbol
-					}
-				}
-			}
-		}
+//		.onAppear {
+//			if !fixedUnitSystem {
+//				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+//				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
+//				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
+//					if allowedUnitSystems == [.imperial] {
+//						measurementUnit = defaultImperialUnitSymbol
+//					}
+//					if allowedUnitSystems == [.SI] {
+//						measurementUnit = defaultSIUnitSymbol
+//					}
+//				}
+//			}
+//		}
 	}
 	
 	func getUnit() -> EngrUnitType {
@@ -1022,20 +1022,20 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 				}
 			}
 		}
-		.onAppear {
-			if !fixedUnitSystem {
-				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
-				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
-				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
-					if allowedUnitSystems == [.imperial] {
-						measurementUnit = defaultImperialUnitSymbol
-					}
-					if allowedUnitSystems == [.SI] {
-						measurementUnit = defaultSIUnitSymbol
-					}
-				}
-			}
-		}
+//		.onAppear {
+//			if !fixedUnitSystem {
+//				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+//				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
+//				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
+//					if allowedUnitSystems == [.imperial] {
+//						measurementUnit = defaultImperialUnitSymbol
+//					}
+//					if allowedUnitSystems == [.SI] {
+//						measurementUnit = defaultSIUnitSymbol
+//					}
+//				}
+//			}
+//		}
 	}
 	
 	func getUnit() -> EngrUnitType {
