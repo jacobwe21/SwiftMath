@@ -831,6 +831,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			}
 		}
 		.onAppear {
+			self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
 			let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
 			if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
 				if !fixedUnitSystem {
@@ -937,6 +938,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			}
 		}
 		.onAppear {
+			self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
 			let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
 			if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
 				if !fixedUnitSystem {
@@ -1023,6 +1025,7 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 			}
 		}
 		.onAppear {
+			self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
 			let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
 			if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
 				if !fixedUnitSystem {
