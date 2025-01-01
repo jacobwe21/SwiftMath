@@ -790,8 +790,8 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 					}
 				} else {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol).hidden()
-					}
+						Text(unitSymbol).tag(unitSymbol)
+					}.hidden()
 				}
 				if allowedUnitSystems.contains(.SI) {
 					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
@@ -799,8 +799,8 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 					}
 				} else {
 					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol).hidden()
-					}
+						Text(unitSymbol).tag(unitSymbol)
+					}.hidden()
 				}
 			}
 			.onChange(of: measurementUnit) {
@@ -871,8 +871,8 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 					}
 				} else {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol).hidden()
-					}
+						Text(unitSymbol).tag(unitSymbol)
+					}.hidden()
 				}
 				if allowedUnitSystems.contains(.SI) {
 					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
@@ -880,8 +880,8 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 					}
 				} else {
 					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol).hidden()
-					}
+						Text(unitSymbol).tag(unitSymbol)
+					}.hidden()
 				}
 			}
 			.onChange(of: measurementUnit) {
@@ -933,8 +933,8 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 					}
 				} else {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol).hidden()
-					}
+						Text(unitSymbol).tag(unitSymbol)
+					}.hidden()
 				}
 				if allowedUnitSystems.contains(.SI) {
 					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
@@ -942,8 +942,8 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 					}
 				} else {
 					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol).hidden()
-					}
+						Text(unitSymbol).tag(unitSymbol)
+					}.hidden()
 				}
 			}
 			.onChange(of: measurementUnit) {
