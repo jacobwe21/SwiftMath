@@ -907,7 +907,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			Text(description)
 			Spacer()
 			Text(measurement.converted(to: getUnit()).value.formatted(sigFigs: ...4))
-			Picker("Unit for \(description)", selection: $measurementUnit) {
+			Picker(os == .macOS ? "":"Unit for \(description)", selection: $measurementUnit) {
 				if allowedUnitSystems.contains(.imperial) {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
 						Text(unitSymbol).tag(unitSymbol)
@@ -924,7 +924,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 				measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
 			}
 			.pickerStyle(.menu)
-			.macOS({$0.frame(width: 300)})
+			.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
 		}
 		.onChange(of: preferredUnitsData) { oldValue, newValue in
 			if !fixedUnitSystem {
