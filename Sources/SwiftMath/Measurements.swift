@@ -142,6 +142,7 @@ public class UnitLinearForce: Dimension, EngineeringUnit {
 public class UnitWork: Dimension, EngineeringUnit {
 	public static let newtonMeters = UnitWork(symbol: "N•m", converter: UnitConverterLinear(coefficient: 1.0))
 	public static let kilonewtonMeters = UnitWork(symbol: "kN•m", converter: UnitConverterLinear(coefficient: 1000.0))
+	public static let kilonewtonMillimeters = UnitWork(symbol: "kN•mm", converter: UnitConverterLinear(coefficient: 1.0))
 	public static let newtonCentimeters = UnitWork(symbol: "N•cm", converter: UnitConverterLinear(coefficient: 0.01))
 	public static let newtonMillimeters = UnitWork(symbol: "N•mm", converter: UnitConverterLinear(coefficient: 0.001))
 	
