@@ -815,7 +815,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			.onChange(of: measurementUnit) {
 				let unit = getUnit()
 				measurement = Measurement(value: measurement.value, unit: unit) // Just change units
-				//measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit) // Conversion Option
+				//measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit) // Conversion Option
 			}
 			.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
 		}
@@ -831,11 +831,10 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			}
 		}
 		.onAppear {
-			self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
-			let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
-			if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
-				if !fixedUnitSystem {
-					self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
+			if !fixedUnitSystem {
+				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
+				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
 					if allowedUnitSystems == [.imperial] {
 						measurementUnit = defaultImperialUnitSymbol
 					}
@@ -921,7 +920,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			}
 			.onChange(of: measurementUnit) {
 				let unit = getUnit()
-				measurement = Measurement(value: measurement.converted(to: getUnit()).value, unit: unit)
+				measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
 			}
 			.pickerStyle(.menu)
 			.macOS({$0.frame(width: 300)})
@@ -938,11 +937,10 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			}
 		}
 		.onAppear {
-			self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
-			let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
-			if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
-				if !fixedUnitSystem {
-					self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
+			if !fixedUnitSystem {
+				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
+				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
 					if allowedUnitSystems == [.imperial] {
 						measurementUnit = defaultImperialUnitSymbol
 					}
@@ -1025,11 +1023,10 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 			}
 		}
 		.onAppear {
-			self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
-			let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
-			if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
-				if !fixedUnitSystem {
-					self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
+			if !fixedUnitSystem {
+				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
+				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
 					if allowedUnitSystems == [.imperial] {
 						measurementUnit = defaultImperialUnitSymbol
 					}
