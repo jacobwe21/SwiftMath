@@ -799,6 +799,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 					if measurement.value < 0 && positiveOnly {
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
+					measurementUnit = measurement.unit.symbol
 				}
 			Picker(os == .macOS ? "":"Unit for \(description)", selection: $measurementUnit) {
 				if allowedUnitSystems.contains(.imperial) {
