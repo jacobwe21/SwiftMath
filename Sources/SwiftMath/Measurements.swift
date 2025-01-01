@@ -726,7 +726,6 @@ public extension Array where Element == UnitSystem {
 
 public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
 	
-	
 	@Environment(\.deviceOS) var os
 	let description: String
 	@Binding var measurement: Measurement<EngrUnitType>
@@ -742,14 +741,15 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	//let maxValue: Measurement<EngrUnitType>?
 	@FocusState var thisMeasurementIsFocused: Bool
 	let positiveOnly: Bool
-	var allowedUnitSystems: [UnitSystem]
+	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
+	@State private var allowedUnitSystems: [UnitSystem]
 	
 	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem]? = nil, positiveOnly: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		self.positiveOnly = positiveOnly
-		self.allowedUnitSystems = allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+		_allowedUnitSystems = State(initialValue: allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
 	}
 //	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem]? = nil, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
 //		self.description = description
@@ -820,6 +820,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			}
 #endif
 		}
+		.onChange(of: preferredUnitsData) { oldValue, newValue in
+			self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
+		}
 //		.toolbar {
 //			if thisMeasurementIsFocused {
 //				ToolbarItemGroup(placement: .keyboard) {
@@ -850,13 +853,14 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	let description: String
 	@State var measurement: Measurement<EngrUnitType>
 	@State private var measurementUnit: String
-	let allowedUnitSystems: [UnitSystem]
+	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
+	@State private var allowedUnitSystems: [UnitSystem]
 	
 	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem]? = nil)  {
 		self.description = description
 		_measurement = State(initialValue: measurement)
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
-		self.allowedUnitSystems = allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+		_allowedUnitSystems = State(initialValue: allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -885,6 +889,9 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			.pickerStyle(.menu)
 			.macOS({$0.frame(width: 300)})
 		}
+		.onChange(of: preferredUnitsData) { oldValue, newValue in
+			self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
+		}
 	}
 	
 	func getUnit() -> EngrUnitType {
@@ -897,13 +904,14 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 	let description: String
 	@Binding var unit: EngrUnitType
 	@State private var measurementUnit: String
-	let allowedUnitSystems: [UnitSystem]
+	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
+	@State private var allowedUnitSystems: [UnitSystem]
 	
 	public init(_ description: String, unit: Binding<EngrUnitType>, allowedUnits: [UnitSystem]? = nil)  {
 		self.description = description
 		_unit = unit
 		_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
-		self.allowedUnitSystems = allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
+		_allowedUnitSystems = State(initialValue: allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -928,7 +936,10 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 				unit = getUnit()
 			}
 			.pickerStyle(.menu)
-			.macOS({$0.frame(width: 300)})
+			//.macOS({$0.frame(width: 300)})
+		}
+		.onChange(of: preferredUnitsData) { oldValue, newValue in
+			self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
 		}
 	}
 	
