@@ -1,5 +1,5 @@
 import XCTest
-@testable import SwiftMath
+//@testable import SwiftMath
 
 final class SwiftMathTests: XCTestCase {
     func testExample() throws {

@@ -33,11 +33,11 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 	
 	public static let inverseKelvin = UnitInverseTemperature(symbol: "1/K", converter: UnitConverterLinear(coefficient: 1))
 	public static let inverseCelsius = UnitInverseTemperature(symbol: "1/°C", converter: UnitConverterInverting(coefficient: 1, constant: -237.15))
-	public static let inverseFahrenheit = UnitInverseTemperature(symbol: "1/°F", converter: UnitConverterInverting(coefficient: 5/9, constant: -459.67))
+	public static let inverseFahrenheit = UnitInverseTemperature(symbol: "1/°F", converter: UnitConverterInverting(coefficient: 5/9, constant: -457.87))
 
-//	public override class func baseUnit() -> Self {
-//		return UnitInverseTemperature.inverseKelvin as! Self
-//	}
+	public override class func baseUnit() -> Self {
+		return UnitInverseTemperature.inverseKelvin as! Self
+	}
 	
 	override public static var supportsSecureCoding: Bool { true }
 	public var isImperial: Bool {
@@ -85,7 +85,7 @@ public class UnitDensity: Dimension, EngineeringUnit {
 	
 	public static let kilogramPerCubicMeter = UnitDensity(symbol: "kg/m³", converter: UnitConverterLinear(coefficient: 1.0))
 	
-	public static let poundsPerCubicFoot = UnitDensity(symbol: "lb/ft³", converter: UnitConverterLinear(coefficient: 0.062427960576145))
+	public static let poundsPerCubicFoot = UnitDensity(symbol: "lb/ft³", converter: UnitConverterLinear(coefficient: 16.018463))
 	
 	public override class func baseUnit() -> Self {
 		return UnitDensity.kilogramPerCubicMeter as! Self
@@ -103,8 +103,8 @@ public class UnitDensity: Dimension, EngineeringUnit {
 public class UnitForce: Dimension, EngineeringUnit {
 	public static let newton = UnitForce(symbol: "N", converter: UnitConverterLinear(coefficient: 1.0))
 	public static let kilonewton = UnitForce(symbol: "kN", converter: UnitConverterLinear(coefficient: 1000))
-	public static let pound = UnitForce(symbol: "lb", converter: UnitConverterLinear(coefficient: 0.22480894244318786))
-	public static let kip = UnitForce(symbol: "k", converter: UnitConverterLinear(coefficient: 224.80894244318786))
+	public static let pound = UnitForce(symbol: "lb", converter: UnitConverterLinear(coefficient: 4.44822162825))
+	public static let kip = UnitForce(symbol: "k", converter: UnitConverterLinear(coefficient: 4448.22162825))
 	
 	public override class func baseUnit() -> Self {
 		return UnitForce.newton as! Self
@@ -125,10 +125,10 @@ public class UnitLinearForce: Dimension, EngineeringUnit {
 	public static let newtonsPerMillimeter = UnitLinearForce(symbol: "N/mm", converter: UnitConverterLinear(coefficient: 1000.0))
 	public static let kilonewtonsPerMillimeter = UnitLinearForce(symbol: "kN/mm", converter: UnitConverterLinear(coefficient: 1_000_000.0))
 	
-	public static let poundsPerFoot = UnitLinearForce(symbol: "lb/ft", converter: UnitConverterLinear(coefficient: 0.06852176586))
-	public static let kipsPerFoot = UnitLinearForce(symbol: "k/ft", converter: UnitConverterLinear(coefficient: 68.5217658589))
-	public static let kipsPerInch = UnitLinearForce(symbol: "k/in", converter: UnitConverterLinear(coefficient: 822.2611589428))
-	public static let poundsPerInch = UnitLinearForce(symbol: "lb/in", converter: UnitConverterLinear(coefficient: 0.8222611589))
+	public static let poundsPerFoot = UnitLinearForce(symbol: "lb/ft", converter: UnitConverterLinear(coefficient: 14.5939029))
+	public static let kipsPerFoot = UnitLinearForce(symbol: "k/ft", converter: UnitConverterLinear(coefficient: 14593.9029))
+	public static let poundsPerInch = UnitLinearForce(symbol: "lb/in", converter: UnitConverterLinear(coefficient: 175.126835))
+	public static let kipsPerInch = UnitLinearForce(symbol: "k/in", converter: UnitConverterLinear(coefficient: 175126.835))
 	
 	public override class func baseUnit() -> Self {
 		return UnitLinearForce.newtonsPerMeter as! Self
@@ -141,7 +141,7 @@ public class UnitLinearForce: Dimension, EngineeringUnit {
 		} else { return false }
 	}
 }
-/// A unit of measure for work (force times distance)
+/// A unit of measure for work (force times distance) - Technically the same as the UnitEnergy class
 public class UnitWork: Dimension, EngineeringUnit {
 	public static let newtonMeters = UnitWork(symbol: "N•m", converter: UnitConverterLinear(coefficient: 1.0))
 	public static let kilonewtonMeters = UnitWork(symbol: "kN•m", converter: UnitConverterLinear(coefficient: 1000.0))
@@ -149,10 +149,10 @@ public class UnitWork: Dimension, EngineeringUnit {
 	public static let newtonCentimeters = UnitWork(symbol: "N•cm", converter: UnitConverterLinear(coefficient: 0.01))
 	public static let newtonMillimeters = UnitWork(symbol: "N•mm", converter: UnitConverterLinear(coefficient: 0.001))
 	
-	public static let poundFeet = UnitWork(symbol: "lb•ft", converter: UnitConverterLinear(coefficient: 0.7375621493))
-	public static let kipFeet = UnitWork(symbol: "k•ft", converter: UnitConverterLinear(coefficient: 737.5621493))
-	public static let kipInches = UnitWork(symbol: "k•in", converter: UnitConverterLinear(coefficient: 8850.745454))
-	public static let poundInches = UnitWork(symbol: "lb•in", converter: UnitConverterLinear(coefficient: 8.850745454))
+	public static let poundFeet = UnitWork(symbol: "lb•ft", converter: UnitConverterLinear(coefficient: 1.35582))
+	public static let kipFeet = UnitWork(symbol: "k•ft", converter: UnitConverterLinear(coefficient: 1355.8179483314))
+	public static let kipInches = UnitWork(symbol: "k•in", converter: UnitConverterLinear(coefficient: 112.9848293))
+	public static let poundInches = UnitWork(symbol: "lb•in", converter: UnitConverterLinear(coefficient: 0.11298482933))
 	
 	public override class func baseUnit() -> Self {
 		return UnitWork.newtonMeters as! Self
@@ -238,11 +238,11 @@ extension UnitVolume: EngineeringUnit {
 }
 public class UnitTesseract: Dimension, EngineeringUnit {
 	public static let tesseractMeters = UnitTesseract(symbol: "m⁴", converter: UnitConverterLinear(coefficient: 1))
-	public static let tesseractCentimeters = UnitTesseract(symbol: "cm⁴", converter: UnitConverterLinear(coefficient: 1_00_00_00_00))
-	public static let tesseractMillimeters = UnitTesseract(symbol: "mm⁴", converter: UnitConverterLinear(coefficient: 1_000_000_000_000))
+	public static let tesseractCentimeters = UnitTesseract(symbol: "cm⁴", converter: UnitConverterLinear(coefficient: 0.00000001))
+	public static let tesseractMillimeters = UnitTesseract(symbol: "mm⁴", converter: UnitConverterLinear(coefficient: 0.000000000001))
 	
-	public static let tesseractFeet = UnitTesseract(symbol: "ft⁴", converter: UnitConverterLinear(coefficient: 115.86176709923))
-	public static let tesseractInches = UnitTesseract(symbol: "in⁴", converter: UnitConverterLinear(coefficient: 2402509.61000961))
+	public static let tesseractFeet = UnitTesseract(symbol: "ft⁴", converter: UnitConverterLinear(coefficient: 0.00863097485))
+	public static let tesseractInches = UnitTesseract(symbol: "in⁴", converter: UnitConverterLinear(coefficient: 0.000000416231426))
 	
 	public override class func baseUnit() -> Self {
 		return UnitTesseract.tesseractMeters as! Self
@@ -286,8 +286,8 @@ extension UnitAcceleration: EngineeringUnit {
 	}
 }
 extension UnitPressure: EngineeringUnit {
-	public static let kipsPerSquareInch = UnitPressure(symbol: "ksi", converter: UnitConverterLinear(coefficient: Double(sign: .plus, exponent: -7, significand: 1.4503773773)))
-	public static let poundsForcePerSquareFoot = UnitPressure(symbol: "psf", converter: UnitConverterLinear(coefficient: 0.0208854342))
+	public static let kipsPerSquareInch = UnitPressure(symbol: "ksi", converter: UnitConverterLinear(coefficient: 6894757.2932))
+	public static let poundsForcePerSquareFoot = UnitPressure(symbol: "psf", converter: UnitConverterLinear(coefficient: 47.88025898))
 	public static let allEngineeringUnits: [UnitPressure] = [.gigapascals,.megapascals,.kilopascals,.newtonsPerMetersSquared,.kipsPerSquareInch,.poundsForcePerSquareFoot,.poundsForcePerSquareInch]
 	public var isImperial: Bool {
 		if self ==|| [.inchesOfMercury,.poundsForcePerSquareInch,.kipsPerSquareInch,.poundsForcePerSquareFoot,.bars,.millibars] {

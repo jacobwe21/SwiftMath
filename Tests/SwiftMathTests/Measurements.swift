@@ -7,7 +7,7 @@
 
 import XCTest
 import MySwift
-import SwiftMath
+import MySwiftMath
 
 final class MeasurementTests: XCTestCase {
 	
@@ -54,6 +54,18 @@ final class MeasurementTests: XCTestCase {
 		let e1v = e1.converted(to: .inverseKelvin).value
 		let e2 = Measurement<UnitInverseTemperature>(value: e1v, unit: .inverseKelvin).converted(to: .inverseFahrenheit)
 		XCTAssertEqual(e1.value, e2.value, accuracy: 0.001)
-		
+	}
+	
+	func testUnitPressureConversions() {
+		var a1 = Measurement<UnitPressure>(value: 29, unit: .kipsPerSquareInch)
+		a1.convert(to: .megapascals)
+		let a2 = Measurement<UnitPressure>(value: 199.9479615, unit: .megapascals)
+		XCTAssertEqual(a1.value, a2.value, accuracy: 0.001)
+		XCTAssertEqual(a1.unit, a2.unit)
+	}
+	func testUnitWorkConversions() {
+		var a1 = Measurement<UnitWork>(value: 1, unit: .newtonMeters)
+		a1.convert(to: .poundFeet)
+		XCTAssertEqual(a1.value, 0.7375610332, accuracy: 0.001)
 	}
 }
