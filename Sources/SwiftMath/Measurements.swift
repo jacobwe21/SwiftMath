@@ -14,6 +14,8 @@ public protocol EngineeringUnit: Dimension {
 	static var allEngineeringUnitSymbols: [String] { get }
 	static var allImperialEngineeringUnitSymbols: [String] { get }
 	static var allSIEngineeringUnitSymbols: [String] { get }
+	//static var deafaultImperialUnit: EngDimension { get }
+	//static var deafaultSIUnit: EngDimension { get }
 	var positiveOnly: Bool { get }
 	var isImperial: Bool { get }
 }
@@ -22,6 +24,7 @@ public extension EngineeringUnit {
 	static var allEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
 	static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({$0.isImperial}).map({$0.symbol}) }
 	static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({!$0.isImperial}).map({$0.symbol}) }
+	//static var deafaultSIUnit: EngDimension { baseUnit() }
 }
 
 ///  The inverse (1/x) of `UnitTemperature`
@@ -827,6 +830,20 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				}
 			}
 		}
+		.onAppear {
+			let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
+			if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
+				if !fixedUnitSystem {
+					self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
+					if allowedUnitSystems == [.imperial] {
+						measurementUnit = defaultImperialUnitSymbol
+					}
+					if allowedUnitSystems == [.SI] {
+						measurementUnit = defaultSIUnitSymbol
+					}
+				}
+			}
+		}
 //		.toolbar {
 //			if thisMeasurementIsFocused {
 //				ToolbarItemGroup(placement: .keyboard) {
@@ -919,6 +936,20 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 				}
 			}
 		}
+		.onAppear {
+			let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
+			if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
+				if !fixedUnitSystem {
+					self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
+					if allowedUnitSystems == [.imperial] {
+						measurementUnit = defaultImperialUnitSymbol
+					}
+					if allowedUnitSystems == [.SI] {
+						measurementUnit = defaultSIUnitSymbol
+					}
+				}
+			}
+		}
 	}
 	
 	func getUnit() -> EngrUnitType {
@@ -988,6 +1019,20 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 				}
 				if allowedUnitSystems == [.SI] {
 					measurementUnit = defaultSIUnitSymbol
+				}
+			}
+		}
+		.onAppear {
+			let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
+			if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
+				if !fixedUnitSystem {
+					self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
+					if allowedUnitSystems == [.imperial] {
+						measurementUnit = defaultImperialUnitSymbol
+					}
+					if allowedUnitSystems == [.SI] {
+						measurementUnit = defaultSIUnitSymbol
+					}
 				}
 			}
 		}
