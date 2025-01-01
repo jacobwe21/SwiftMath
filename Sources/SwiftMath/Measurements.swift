@@ -154,7 +154,7 @@ public class UnitWork: Dimension, EngineeringUnit {
 	public override class func baseUnit() -> Self {
 		return UnitWork.newtonMeters as! Self
 	}
-	public static let allEngineeringUnits: [UnitWork] = [ .newtonMeters, .newtonCentimeters, .newtonMillimeters, .kilonewtonMeters, .poundFeet, .kipFeet, .kipInches, .poundInches]
+	public static let allEngineeringUnits: [UnitWork] = [ .newtonMeters, .newtonCentimeters, .newtonMillimeters, .kilonewtonMeters, .kilonewtonMillimeters, .poundFeet, .kipFeet, .kipInches, .poundInches]
 	override public static var supportsSecureCoding: Bool { true }
 	public var isImperial: Bool {
 		if self ==|| [.poundFeet,.poundInches,.kipInches,.kipFeet] {
