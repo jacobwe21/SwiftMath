@@ -1010,8 +1010,8 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 				unit = getUnit()
 			}
 			.pickerStyle(.menu)
-			.macOS({$0.frame(width: 300)})
 		}
+		.macOS({$0.frame(width: 300)})
 		.onChange(of: preferredUnitsData) { oldValue, newValue in
 			if !fixedUnitSystem {
 				self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
