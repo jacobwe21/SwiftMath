@@ -970,7 +970,11 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 	let defaultSIUnitSymbol: String
 	
 	public init(_ description: String, unit: Binding<EngrUnitType>, allowedUnits: [UnitSystem])  {
+#if os(macOS)
+		self.description = description+":"
+#else
 		self.description = description
+#endif
 		_unit = unit
 		_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
 		_allowedUnitSystems = State(initialValue: allowedUnits)
@@ -979,7 +983,11 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 		defaultSIUnitSymbol = EngrUnitType.allSIEngineeringUnitSymbols.first!
 	}
 	public init(_ description: String, unit: Binding<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType)  {
+#if os(macOS)
+		self.description = description+":"
+#else
 		self.description = description
+#endif
 		_unit = unit
 		_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
 		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
