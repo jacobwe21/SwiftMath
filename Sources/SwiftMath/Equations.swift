@@ -84,7 +84,8 @@ public struct Math {
 				} else {
 					var segment = s
 					segment.eq = s.eq.integrate(plus: 0)
-					let cForSegment = MultiEQ(segments: newSegments)(s.xStart) - (segment.eq(s.xStart)-segment.eq(0))
+					//let cForSegment = MultiEQ(segments: newSegments)(s.xStart) - (segment.eq(s.xStart)-segment.eq(0))
+					let cForSegment = -(segment.eq(s.xStart)-segment.eq(0))
 					let segmentC = Segment(eq: Math.BasicPolynomialEQ(terms: .init(cForSegment, xToThe: 0)), xStart: s.xStart, xEnd: Double.infinity, xStartIsInclusive: s.xStartIsInclusive, xEndIsInclusive: false)
 					newSegments.append(segment)
 					newSegments.append(segmentC)
