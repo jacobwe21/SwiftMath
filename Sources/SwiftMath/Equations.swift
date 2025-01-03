@@ -83,6 +83,24 @@ public struct Math {
 			}
 			return str+"\n}"
 		}
+		
+		public func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double = 10) -> (min: Double, max: Double) {
+			guard segments.count > 0 else { return (0, 0) }
+			let minX = segments.min(by: {$0.xStart < $1.xStart})!.xStart
+			let maxX = segments.max(by: {$0.xEnd < $1.xEnd})!.xEnd
+			let xStart = max(range?.lowerBound ?? minX, minX)
+			let xEnd = min(range?.upperBound ?? maxX, maxX)
+			var minValue = callAsFunction(xStart)
+			var maxValue = minValue
+			for i in 1..<Int(num_dx) {
+				let z = Double(i)/num_dx // Percent
+				if z > 1 || z < 0 { fatalError("z out of range") }
+				let x = xStart + (xEnd - xStart)*z
+				minValue = min(minValue, callAsFunction(x))
+				maxValue = max(maxValue, callAsFunction(x))
+			}
+			return (minValue, maxValue)
+		}
 	}
 	
 	public struct BasicPolynomialEQ: MathEquation {
@@ -95,29 +113,42 @@ public struct Math {
 		public init(terms: Term...) {
 			self.terms = terms
 		}
-		public init(_ str1: String) {
-			var str2 = str1.trimmingCharacters(in: CharacterSet(arrayLiteral: " "))
-			str2 = str2.replacingOccurrences(of: "-", with: "+-")
-			var termStrs = str2.components(separatedBy: CharacterSet(arrayLiteral: "+"))
-			termStrs.updateEach { s in
-				s.trimmingCharacters(in: CharacterSet(charactersIn: " "))
-			}
-			termStrs.removeAll { $0.isEmpty }
-			var terms = [Term]()
-			for t in termStrs {
-				let t2 = t.replacingOccurrences(of: "x^", with: "x")
-				let components = t2.components(separatedBy: CharacterSet(arrayLiteral: "x"))
-				if components.count == 2 {
-					let a = components.first!
-					let n = components.last!
-					terms.append(Term(Double(a) ?? 1, xToTheDouble: Double(n) ?? 1))
-				} else if components.count == 1 {
-					let a = components.first!
-					terms.append(Term(Double(a) ?? 1, xToThe: 0))
-				}
-			}
-			self.terms = terms
-		}
+//		public init(_ str1: String) {
+//			var str2 = str1.trimmingCharacters(in: CharacterSet(arrayLiteral: " "))
+//			str2 = str2.replacingOccurrences(of: "-", with: "+-")
+//			var termStrs = str2.components(separatedBy: CharacterSet(arrayLiteral: "+"))
+//			termStrs.updateEach { s in
+//				s.trimmingCharacters(in: CharacterSet(charactersIn: " "))
+//			}
+//			termStrs.removeAll { $0.isEmpty }
+//			var terms = [Term]()
+//			for t in termStrs {
+//				let t2 = t.replacingOccurrences(of: "x^", with: "x")
+//				let components = t2.components(separatedBy: CharacterSet(arrayLiteral: "x"))
+//				if components.count == 2 {
+//					let a = components.first!
+//					let n = components.last!
+//					terms.append(Term(Double(a) ?? 1, xToTheDouble: Double(n) ?? 1))
+//				} else if components.count == 1 {
+//					let a = components.first!
+//					terms.append(Term(Double(a) ?? 1, xToThe: 0))
+//				}
+//			}
+//			self.terms = terms
+//		}
+//		public init(_ polynomial: String) {
+//			let pattern = #"([-+]?[0-9]*\.?[0-9]*)x\^?([0-9]*)"#
+//			let regex = try! NSRegularExpression(pattern: pattern)
+//			let matches = regex.matches(in: polynomial, range: NSRange(polynomial.startIndex..., in: polynomial))
+//
+//			var terms = [Term]()
+//			for match in matches {
+//				let coefficient = Double((Range(match.range(at: 1), in: polynomial).flatMap { String(polynomial[$0]) }) ?? "1") ?? 1.0
+//				let degree = Double((Range(match.range(at: 2), in: polynomial).flatMap { String(polynomial[$0]) }) ?? "1") ?? 1.0
+//				terms.append(Term(coefficient, xToTheDouble: degree))
+//			}
+//			self.terms = terms
+//		}
 		
 		public func callAsFunction(_ x: Double) -> Double {
 			var result = 0.0
@@ -200,5 +231,34 @@ public struct Math {
 		public var description: String {
 			return "\(term) (impulse)"
 		}
+	}
+}
+public struct AnyMathEquation: MathEquation {
+	private let _callAsFunction: (Double) -> Double
+	private let _makeDerivative: () -> MathEquation
+	private let _integrate: (Double) -> MathEquation
+	private let _description: () -> String
+
+	public init<E: MathEquation>(_ equation: E) {
+		_callAsFunction = equation.callAsFunction
+		_makeDerivative = equation.makeDerivative
+		_integrate = equation.integrate
+		_description = { equation.description }
+	}
+
+	public func callAsFunction(_ x: Double) -> Double {
+		_callAsFunction(x)
+	}
+
+	public func makeDerivative() -> MathEquation {
+		_makeDerivative()
+	}
+
+	public func integrate(plus c: Double) -> MathEquation {
+		_integrate(c)
+	}
+
+	public var description: String {
+		_description()
 	}
 }
