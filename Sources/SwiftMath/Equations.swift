@@ -7,7 +7,7 @@
 import SwiftUI
 
 public protocol MathEquation: CustomStringConvertible {
-	func callAsFunction(_ x: Double) -> Double
+	@Sendable func callAsFunction(_ x: Double) -> Double
 	func makeDerivative() -> MathEquation
 	func integrate(plus c: Double) -> MathEquation
 }
