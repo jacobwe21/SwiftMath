@@ -69,8 +69,15 @@ public struct Math {
 		
 		public func integrate(plus c: Double) -> any MathEquation {
 			var newSegments: [Segment] = []
+			let sortedSegments = segments.sorted(by: {
+				if $0.xStart == $1.xStart {
+					return $0.xStartIsInclusive
+				} else {
+					return $0.xStart<$1.xStart
+				}
+			})
 			// Intergrate segments
-			for s in segments {
+			for s in sortedSegments {
 				if s.eq is Math.Impulse {
 					var segment = Segment(eq: Math.BasicPolynomialEQ(terms: .init(s.eq(0), xToThe: 0)), xStart: s.xStart, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
 					newSegments.append(segment)
@@ -78,11 +85,14 @@ public struct Math {
 					var segment = s
 					segment.eq = s.eq.integrate(plus: 0)
 					newSegments.append(segment)
+					let cForSegment = MultiEQ(segments: newSegments)(s.xStart) - (segment.eq(s.xStart)-segment.eq(0))
+					let segmentC = Segment(eq: Math.BasicPolynomialEQ(terms: .init(cForSegment, xToThe: 0)), xStart: -Double.infinity, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
+					newSegments.append(segmentC)
 				}
 			}
 			// Adjust by c
 			if c != 0 {
-				let segment = Segment(eq: Math.BasicPolynomialEQ(terms: .init(c, xToThe: 0)), xStart: -Double.infinity, xEnd: Double.infinity, xStartIsInclusive: true, xEndIsInclusive: false)
+				let segment = Segment(eq: Math.BasicPolynomialEQ(terms: .init(c, xToThe: 0)), xStart: -Double.infinity, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
 				newSegments.append(segment)
 			}
 			return MultiEQ(segments: newSegments)
