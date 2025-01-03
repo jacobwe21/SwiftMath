@@ -6,8 +6,8 @@
 
 import SwiftUI
 
-public protocol MathEquation: CustomStringConvertible {
-	@Sendable func callAsFunction(_ x: Double) -> Double
+public protocol MathEquation: CustomStringConvertible, Sendable {
+	func callAsFunction(_ x: Double) -> Double
 	func makeDerivative() -> MathEquation
 	func integrate(plus c: Double) -> MathEquation
 }
@@ -30,7 +30,7 @@ public struct Math {
 			self.segments = newSegments
 		}
 		
-		public struct Segment {
+		public struct Segment: Sendable {
 			var eq: any MathEquation
 			let xStart: Double
 			let xEnd: Double
@@ -184,7 +184,7 @@ public struct Math {
 			}
 			return termDescriptions.joined(separator: " + ")
 		}
-		public struct Term: CustomStringConvertible {
+		public struct Term: CustomStringConvertible, Sendable {
 			let degree: Double
 			let coefficient: Double
 			
@@ -233,32 +233,32 @@ public struct Math {
 		}
 	}
 }
-public struct AnyMathEquation: MathEquation {
-	private let _callAsFunction: (Double) -> Double
-	private let _makeDerivative: () -> MathEquation
-	private let _integrate: (Double) -> MathEquation
-	private let _description: () -> String
-
-	public init<E: MathEquation>(_ equation: E) {
-		_callAsFunction = equation.callAsFunction
-		_makeDerivative = equation.makeDerivative
-		_integrate = equation.integrate
-		_description = { equation.description }
-	}
-
-	public func callAsFunction(_ x: Double) -> Double {
-		_callAsFunction(x)
-	}
-
-	public func makeDerivative() -> MathEquation {
-		_makeDerivative()
-	}
-
-	public func integrate(plus c: Double) -> MathEquation {
-		_integrate(c)
-	}
-
-	public var description: String {
-		_description()
-	}
-}
+//public struct AnyMathEquation: MathEquation {
+//	private let _callAsFunction: (Double) -> Double
+//	private let _makeDerivative: () -> MathEquation
+//	private let _integrate: (Double) -> MathEquation
+//	private let _description: () -> String
+//
+//	public init<E: MathEquation>(_ equation: E) {
+//		_callAsFunction = equation.callAsFunction
+//		_makeDerivative = equation.makeDerivative
+//		_integrate = equation.integrate
+//		_description = { equation.description }
+//	}
+//
+//	public func callAsFunction(_ x: Double) -> Double {
+//		_callAsFunction(x)
+//	}
+//
+//	public func makeDerivative() -> MathEquation {
+//		_makeDerivative()
+//	}
+//
+//	public func integrate(plus c: Double) -> MathEquation {
+//		_integrate(c)
+//	}
+//
+//	public var description: String {
+//		_description()
+//	}
+//}
