@@ -45,6 +45,9 @@ public struct Math {
 				self.xStartIsInclusive = xStartIsInclusive
 				self.xEndIsInclusive = xEndIsInclusive
 			}
+			public mutating func scale(by rhs: Double) {
+				eq.scale(by: rhs)
+			}
 		}
 		public private(set) var segments: [Segment]
 		
