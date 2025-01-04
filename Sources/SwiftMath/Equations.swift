@@ -10,6 +10,8 @@ public protocol MathEquation: CustomStringConvertible, Sendable {
 	func callAsFunction(_ x: Double) -> Double
 	func makeDerivative() -> MathEquation
 	func integrate(plus c: Double) -> MathEquation
+	mutating func scale(by rhs: Double)
+	func scaled(by rhs: Double) -> Self
 }
 extension MathEquation {
 	
@@ -44,7 +46,7 @@ public struct Math {
 				self.xEndIsInclusive = xEndIsInclusive
 			}
 		}
-		public let segments: [Segment]
+		public private(set) var segments: [Segment]
 		
 		public func callAsFunction(_ x: Double) -> Double {
 			var result = 0.0
@@ -79,7 +81,7 @@ public struct Math {
 			// Intergrate segments
 			for s in sortedSegments {
 				if s.eq is Math.Impulse {
-					var segment = Segment(eq: Math.BasicPolynomialEQ(terms: .init(s.eq(0), xToThe: 0)), xStart: s.xStart, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
+					let segment = Segment(eq: Math.BasicPolynomialEQ(terms: .init(s.eq(0), xToThe: 0)), xStart: s.xStart, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
 					newSegments.append(segment)
 				} else {
 					var segment = s
@@ -97,6 +99,20 @@ public struct Math {
 				newSegments.append(segment)
 			}
 			return MultiEQ(segments: newSegments)
+		}
+		public mutating func scale(by rhs: Double) {
+			for i in segments.indices {
+				segments[i].eq.scale(by: rhs)
+			}
+		}
+		public func scaled(by rhs: Double) -> Self {
+			var newSegments: [Segment] = []
+			for segment in segments {
+				var newSegment = segment
+				newSegment.eq.scale(by: rhs)
+				newSegments.append(newSegment)
+			}
+			return Self.init(segments: newSegments)
 		}
 		
 		public var description: String {
@@ -128,7 +144,7 @@ public struct Math {
 	
 	public struct BasicPolynomialEQ: MathEquation {
 		
-		public let terms: [Term]
+		public private(set) var terms: [Term]
 		
 		public init(terms: [Term]) {
 			self.terms = terms
@@ -201,6 +217,19 @@ public struct Math {
 			return BasicPolynomialEQ(terms: newTerms)
 		}
 		
+		public mutating func scale(by rhs: Double) {
+			for i in terms.indices {
+				terms[i] = terms[i]*rhs
+			}
+		}
+		public func scaled(by rhs: Double) -> Self {
+			var terms: [Term] = []
+			for t in self.terms {
+				terms.append(t*rhs)
+			}
+			return Self.init(terms: terms)
+		}
+		
 		public var description: String {
 			let termDescriptions = terms.map { term in
 				term.description
@@ -208,8 +237,9 @@ public struct Math {
 			return termDescriptions.joined(separator: " + ")
 		}
 		public struct Term: CustomStringConvertible, Sendable {
-			let degree: Double
-			let coefficient: Double
+
+			private(set) var degree: Double
+			private(set) var coefficient: Double
 			
 			public init(_ coefficient: Double, xToThe degree: UInt) {
 				self.degree = Double(degree)
@@ -218,6 +248,12 @@ public struct Math {
 			init(_ coefficient: Double, xToTheDouble degree: Double) {
 				self.degree = Double(degree)
 				self.coefficient = coefficient
+			}
+			public static func * (_ lhs: Self, _ rhs: Double) -> Self {
+				return Term(lhs.coefficient*rhs, xToTheDouble: lhs.degree)
+			}
+			public static func * (_ lhs: Double, _ rhs: Self) -> Self {
+				return Term(lhs*rhs.coefficient, xToTheDouble: rhs.degree)
 			}
 			
 			public var description: String {
@@ -234,7 +270,7 @@ public struct Math {
 	
 	public struct Impulse: MathEquation {
 		
-		public let term: Double
+		public private(set) var term: Double
 		
 		public init(term: Double) {
 			self.term = term
@@ -249,6 +285,12 @@ public struct Math {
 		}
 		public func integrate(plus c: Double) -> MathEquation {
 			return BasicPolynomialEQ(terms: BasicPolynomialEQ.Term(term, xToThe: 0))
+		}
+		public mutating func scale(by rhs: Double) {
+			term *= rhs
+		}
+		public func scaled(by rhs: Double) -> Self {
+			return Impulse(term: term*rhs)
 		}
 		
 		public var description: String {
