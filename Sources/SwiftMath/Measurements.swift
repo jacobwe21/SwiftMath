@@ -357,7 +357,7 @@ public extension Measurement {
 		return Self.divideMeasurementsIntoNewMeasurement(a: a, b: b, returnType: R.self)
 	}
 	
-	// W = P*L
+	// F/L = P*L
 	static func * <R: UnitLinearForce>(a: Measurement<UnitPressure>, b: Measurement<UnitLength>) -> Measurement<R> {
 		return Self.multiplyMeasurementsIntoNewMeasurement(a: a, b: b, returnType: R.self)
 	}
@@ -418,6 +418,7 @@ public extension Measurement {
 	static func / <R: UnitArea>(a: Measurement<UnitTesseract>, b: Measurement<UnitArea>) -> Measurement<R> {
 		return Self.divideMeasurementsIntoNewMeasurement(a: a, b: b, returnType: R.self)
 	}
+	
 	// V = A*L
 	static func * <R: UnitVolume>(a: Measurement<UnitArea>, b: Measurement<UnitLength>) -> Measurement<R> {
 		return Self.multiplyMeasurementsIntoNewMeasurement(a: a, b: b, returnType: R.self)
