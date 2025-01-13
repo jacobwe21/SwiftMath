@@ -5,6 +5,7 @@
 //
 
 import SwiftUI
+import Accelerate
 
 public protocol MathEquation: CustomStringConvertible, Sendable {
 	func callAsFunction(_ x: Double) -> Double
@@ -14,7 +15,19 @@ public protocol MathEquation: CustomStringConvertible, Sendable {
 	func scaled(by rhs: Double) -> Self
 }
 extension MathEquation {
-	
+	func definiteIntegral(over domain: ClosedRange<Double>, absoluteTolerance: Double = 1.0e-8, relativeTolerance: Double = 1.0e-2) throws -> Double {
+		let q = Quadrature(integrator: .qags(maxIntervals: 12), absoluteTolerance: absoluteTolerance, relativeTolerance: relativeTolerance)
+		let result = q.integrate(over: domain, integrand: callAsFunction)
+		switch result {
+		case .success((let integralResult, let estimatedAbsoluteError)):
+			print("quadrature success:", integralResult,
+				  estimatedAbsoluteError)
+			return integralResult
+		case .failure(let error):
+			print("quadrature error:", error.errorDescription)
+			throw error
+		}
+	}
 }
 
 public struct Math {
