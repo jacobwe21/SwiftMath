@@ -1,7 +1,6 @@
 //
 //  Measurements.swift
 //
-//
 //  Created by Jacob W Esselstyn on 6/23/23.
 //
 
@@ -463,6 +462,14 @@ public extension Measurement {
 	private static func divideMeasurementsIntoNewMeasurement<A: Dimension, B: Dimension, R: Dimension>(a: Measurement<A>, b: Measurement<B>, returnType: R.Type) -> Measurement<R> {
 		let value = a.converted(to: .baseUnit()).value / b.converted(to: .baseUnit()).value
 		return Measurement<R>(value: value, unit: .baseUnit())
+	}
+	// Negation
+	static prefix func - <D: EngineeringUnit>(measurement: Measurement<D>) -> Measurement<D> {
+		if measurement.unit.positiveOnly {
+			return measurement
+		} else {
+			return Measurement<D>(value: -measurement.value, unit: measurement.unit)
+		}
 	}
 }
 
