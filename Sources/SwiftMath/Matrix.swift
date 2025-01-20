@@ -98,7 +98,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable {
 	}
 	
 	/// Returns the transpose of the matrix (swapping rows for columns)
-	public var matrixTranspose: Self {
+	public var transpose: Self {
 		guard rows > 0 && columns > 0 else { return self }
 		var newMatrix: [[T]] = Array<Array<T>>(repeating: Array<T>(repeating: T.init(0.0), count: rows), count: columns)
 		for i in self.values.indices {
@@ -110,7 +110,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable {
 	}
 	
 	/// Returns `true` if matrix is symmetric
-	public var isSymmetric: Bool { self == self.matrixTranspose }
+	public var isSymmetric: Bool { self == self.transpose }
 	
 	/// Check if the matrix is square.
 	private var isSquare: Bool { rows == columns }
