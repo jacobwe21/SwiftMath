@@ -26,7 +26,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable {
 	}
 	/// Perform Matrix Multiplication
 	public static func * (lhs: Self, rhs: Self) throws -> Self {
-		guard lhs.rows == rhs.columns && lhs.columns == rhs.rows else { throw MatrixError.nonMatchingDimensions }
+		guard lhs.columns == rhs.rows else { throw MatrixError.nonMatchingDimensions }
 		var result: [[T]] = Array<Array<T>>(repeating: Array<T>(repeating: T.init(0.0), count: rhs.columns), count: lhs.rows)
 		for i in 0..<lhs.rows {
 			for j in 0..<rhs.columns {
