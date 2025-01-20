@@ -8,12 +8,12 @@ import Foundation
 
 public struct Matrix<T: BinaryFloatingPoint>: Hashable {
 	
-	var rows: Int { values.count }
-	var columns: Int { values.first?.count ?? 0 }
-	var values: [[T]]
+	public var rows: Int { values.count }
+	public var columns: Int { values.first?.count ?? 0 }
+	public private(set) var values: [[T]]
 	
 	/// Creates a matrix where the outer array is for rows and the inner array is for columns.
-	public init(values: [[T]]) {
+	public init(_ values: [[T]]) {
 		self.values = values
 	}
 	public init(repeating value: T, rows: Int, columns: Int) {
