@@ -35,7 +35,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable {
 				}
 			}
 		}
-		return Matrix(values: result)
+		return Matrix(result)
 	}
 	
 	/// Elementwise addition
@@ -106,7 +106,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable {
 				newMatrix[j][i] = self.values[i][j]
 			}
 		}
-		return Matrix(values: newMatrix)
+		return Matrix(newMatrix)
 	}
 	
 	/// Returns `true` if matrix is symmetric
