@@ -176,8 +176,6 @@ struct MathFormula {
 	}
 }
 
-// MARK: - Private API
-
 fileprivate extension MathFormula {
 	func containsBracket(_ bracket: MathBrackets) -> Bool {
 		string.contains(bracket.opening) || string.contains(bracket.closing)
