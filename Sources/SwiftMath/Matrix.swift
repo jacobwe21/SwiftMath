@@ -110,7 +110,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable {
 	}
 	
 	/// Returns `true` if matrix is symmetric
-	public var isSymmetric: Bool { self == self.transpose }
+	public var isSymmetric: Bool { if isSquare { return self == self.transpose } else { return false } }
 	
 	/// Check if the matrix is square.
 	private var isSquare: Bool { rows == columns }
