@@ -916,6 +916,9 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			Spacer()
 			Text(measurement.converted(to: getUnit()).value.formatted(sigFigs: ...4))
 			Picker(os == .macOS ? "":"Unit for \(description)", selection: $measurementUnit) {
+//				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
+//					Text(unitSymbol).tag(unitSymbol)
+//				}
 				if allowedUnitSystems.contains(.imperial) {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
 						Text(unitSymbol).tag(unitSymbol)
@@ -1011,19 +1014,19 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 //			Text(description)
 //			Spacer()
 			Picker(description, selection: $measurementUnit) {
-				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
-					Text(unitSymbol).tag(unitSymbol)
+//				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
+//					Text(unitSymbol).tag(unitSymbol)
+//				}
+				if allowedUnitSystems.contains(.imperial) {
+					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
 				}
-//				if allowedUnitSystems.contains(.imperial) {
-//					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
-//						Text(unitSymbol).tag(unitSymbol)
-//					}
-//				}
-//				if allowedUnitSystems.contains(.SI) {
-//					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
-//						Text(unitSymbol).tag(unitSymbol)
-//					}
-//				}
+				if allowedUnitSystems.contains(.SI) {
+					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
+				}
 			}
 			.onChange(of: measurementUnit) {
 				unit = getUnit()
