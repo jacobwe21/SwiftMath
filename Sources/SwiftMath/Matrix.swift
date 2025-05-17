@@ -10,7 +10,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 	
 	public let rows: Int
 	public let columns: Int
-	private(set) var values: [[T]]
+	public private(set) var values: [[T]]
 	
 	/// Creates a matrix where the outer array is for rows and the inner array is for columns. Throws errors.
 	public init(_ values: [[T]], mustBeSquare: Bool) throws {
