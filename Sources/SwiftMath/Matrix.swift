@@ -5,6 +5,8 @@
 //  Created by Jacob W Esselstyn on 1/19/25.
 //
 import Foundation
+import simd
+import Accelerate
 
 public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible {
 	
@@ -57,6 +59,36 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 		}
 		return result
 	}
+	public init(_ simdMatrix: simd_double2x2) where T == Double {
+		self.rows = 2
+		self.columns = 2
+		let m = simdMatrix.transpose
+		self.values = [
+			[m.columns.0.x, m.columns.0.y],
+			[m.columns.1.x, m.columns.1.y],
+		]
+	}
+	public init(_ simdMatrix: simd_double3x3) where T == Double {
+		self.rows = 3
+		self.columns = 3
+		let m = simdMatrix.transpose
+		self.values = [
+			[m.columns.0.x, m.columns.0.y, m.columns.0.z],
+			[m.columns.1.x, m.columns.1.y, m.columns.1.z],
+			[m.columns.2.x, m.columns.2.y, m.columns.2.z],
+		]
+	}
+	public init(_ simdMatrix: simd_double4x4) where T == Double {
+		self.rows = 4
+		self.columns = 4
+		let m = simdMatrix.transpose
+		self.values = [
+			[m.columns.0.x, m.columns.0.y, m.columns.0.z, m.columns.0.w],
+			[m.columns.1.x, m.columns.1.y, m.columns.1.z, m.columns.1.w],
+			[m.columns.2.x, m.columns.2.y, m.columns.2.z, m.columns.2.w],
+			[m.columns.3.x, m.columns.3.y, m.columns.3.z, m.columns.3.w],
+		]
+	}
 	
 	/// Check if rows and columns of each matrix match.
 	public static func areDimensionsEqual(lhs: Self, rhs: Self) -> Bool {
@@ -107,6 +139,16 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 		for i in 0..<result.rows {
 			for j in 0..<result.columns {
 				result.values[i][j] = result.values[i][j]*rhs
+			}
+		}
+		return result
+	}
+	/// Scalar division
+	public static func / (lhs: Matrix<T>, rhs: T) -> Matrix<T> {
+		var result = lhs
+		for i in 0..<result.rows {
+			for j in 0..<result.columns {
+				result.values[i][j] = result.values[i][j]/rhs
 			}
 		}
 		return result
@@ -175,7 +217,147 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 	public func determinant() throws -> T {
 		guard isSquare else { throw MatrixError.notSquareMatrix }
 		return Matrix.calculateDeterminant(for: values)
-		//return rowEcholonForm?.mainDiagonal?.reduce(1, *) ?? 0
+	}
+	
+	public func cofactorMatrix() throws -> Matrix<T> {
+		guard isSquare else {
+			throw MatrixError.notSquareMatrix
+		}
+		let n = rows
+		guard n > 1 else { throw MatrixError.indexOutOfRange }
+		if n == 2 {
+			return Matrix([
+				[values[1][1], -values[1][0]],
+				[-values[0][1], values[0][0]]
+			])
+		}
+		var cofactorMatrix = [[T]](repeating: [T](repeating: 0, count: n), count: n)
+		for i in 0..<n {
+			for j in 0..<n {
+				let minor = minorMatrix(removingRow: i, removingColumn: j)
+				let sign: T = ((i + j) % 2 == 0) ? 1 : -1
+				cofactorMatrix[i][j] = sign * Matrix.calculateDeterminant(for: minor)
+			}
+		}
+		return Matrix(cofactorMatrix)
+	}
+	public func adjoint() throws -> Matrix<T> {
+		// Transpose the cofactor matrix to get the adjoint
+		return try self.cofactorMatrix().transpose()
+	}
+	private func minorMatrix(removingRow rowToRemove: Int, removingColumn columnToRemove: Int) -> [[T]] {
+		values.enumerated().compactMap { i, row in
+			guard i != rowToRemove else { return nil }
+			let filteredRow = row.enumerated().compactMap { j, value in
+				j != columnToRemove ? value : nil
+			}
+			return filteredRow
+		}
+	}
+	
+	public func removing(rows rowsToRemove: [Int], columns columnsToRemove: [Int]) throws -> Matrix<T> {
+		for row in rowsToRemove {
+			if row < 0 || row >= rows { throw MatrixError.indexOutOfRange }
+		}
+		for column in columnsToRemove {
+			if column < 0 || column >= columns { throw MatrixError.indexOutOfRange }
+		}
+		let rowSet = Set(rowsToRemove)
+		let columnSet = Set(columnsToRemove)
+		let filteredValues: [[T]] = values.enumerated().compactMap { (i, row) in
+			guard !rowSet.contains(i) else { return nil }
+			let filteredRow = row.enumerated().compactMap { (j, value) in
+				columnSet.contains(j) ? nil : value
+			}
+			return filteredRow
+		}
+		return Matrix(filteredValues)
+	}
+	
+	/// Determinant of the matrix (only defined for square matrices).
+	public func inverse() throws -> Matrix<T> {
+		guard isSquare else { throw MatrixError.notSquareMatrix }
+		
+		let det = Matrix.calculateDeterminant(for: values)
+		if det == 0 { throw MatrixError.singularMatrix }
+		
+		let size = rows
+		if size == 1 { return Matrix([[(1/values[0][0])]]) }
+		if size == 3 {
+			let m = values
+
+			let a = m[0][0], b = m[0][1], c = m[0][2]
+			let d = m[1][0], e = m[1][1], f = m[1][2]
+			let g = m[2][0], h = m[2][1], i = m[2][2]
+
+			let A = e * i - f * h
+			let B = -(d * i - f * g)
+			let C = d * h - e * g
+			let D = -(b * i - c * h)
+			let E = a * i - c * g
+			let F = -(a * h - b * g)
+			let G = b * f - c * e
+			let H = -(a * f - c * d)
+			let I = a * e - b * d
+			
+			let det = a * A + b * B + c * C
+			guard det != 0 else {
+				throw MatrixError.singularMatrix
+			}
+			let resultValues: [[T]] = [
+				[A, D, G],
+				[B, E, H],
+				[C, F, I]
+			]
+			return Matrix(resultValues)/det
+		}
+		if size < 5 {
+			return (1/det)*(try! self.adjoint())
+		}
+		
+		var augmented = values
+
+		// Append identity matrix to the right of the original
+		for i in 0..<size {
+			augmented[i] += (0..<size).map { $0 == i ? 1 : 0 }.map(T.init)
+		}
+
+		// Perform Gauss-Jordan elimination
+		for i in 0..<size {
+			// Find pivot
+			var pivotRow = i
+			for j in i+1..<size where abs(augmented[j][i]) > abs(augmented[pivotRow][i]) {
+				pivotRow = j
+			}
+
+			// If pivot is zero, matrix is singular
+			if augmented[pivotRow][i] == 0 {
+				throw MatrixError.singularMatrix
+			}
+
+			// Swap rows if needed
+			if i != pivotRow {
+				augmented.swapAt(i, pivotRow)
+			}
+
+			// Normalize pivot row
+			let pivot = augmented[i][i]
+			for j in 0..<2 * size {
+				augmented[i][j] /= pivot
+			}
+
+			// Eliminate other rows
+			for k in 0..<size where k != i {
+				let factor = augmented[k][i]
+				for j in 0..<2 * size {
+					augmented[k][j] -= factor * augmented[i][j]
+				}
+			}
+		}
+
+		// Extract right half as the inverse
+		let inverseValues = augmented.map { Array($0[size..<(2*size)]) }
+		return Matrix(inverseValues)
 	}
 	
 	/// Recursive helper function to calculate the determinant.
@@ -196,10 +378,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 		}
 	
 		var det: T = 0
-		// Calculate determinant using row reduction (Gaussian elimination) - O(n^3)
-		// TO-DO
 		// Calculate determinant using cofactor expansion - O(n!)
-		// Calculate determinant using LU decomposition?
 		for i in 0..<n {
 			// Create the submatrix by excluding the first row and the ith column
 			var subMatrix = [[T]]()
@@ -216,6 +395,10 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 			let sign: T = (i % 2 == 0) ? 1 : -1
 			det += sign * matrix[0][i] * calculateDeterminant(for: subMatrix)
 		}
+		// TO-DO
+		// Calculate determinant using row reduction (Gaussian elimination) - O(n^3)
+		//return rowEcholonForm?.mainDiagonal?.reduce(1, *) ?? 0
+		// Calculate determinant using LU decomposition?
 		return det
 	}
 	
@@ -277,3 +460,120 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 		return result
 	}
 }
+
+// MARK: Large Sparse Matrices
+public extension SparseMatrix_Double {
+	
+	enum MatrixUpdateError: Error {
+		case couldNotFindData
+		case invalidRowIndex
+		case invalidColumnIndex
+	}
+	mutating func updateMatrix(at row: Int, column: Int, with newValue: Double) throws {
+		guard row >= 0 else { throw MatrixUpdateError.invalidRowIndex }
+		guard column >= 0 else { throw MatrixUpdateError.invalidColumnIndex }
+		guard row < Int(self.structure.rowCount) else { throw MatrixUpdateError.invalidRowIndex }
+		guard column < Int(self.structure.columnCount) else { throw MatrixUpdateError.invalidColumnIndex }
+		
+		// loop through the matrix to find the index for the data to update
+		let nnz = self.structure.columnStarts[Int(self.structure.columnCount)]
+		var i = 0
+		var currentColumn: Int = 0
+		var nextColStarts = self.structure.columnStarts[1]
+		while i < nnz {
+			if i == nextColStarts {
+				currentColumn += 1
+				if currentColumn > column { throw MatrixUpdateError.couldNotFindData }
+				nextColStarts = self.structure.columnStarts[currentColumn + 1]
+			}
+			let rowIndex = Int(self.structure.rowIndices[i])
+			if rowIndex == row && currentColumn == column {
+				self.data[i] = newValue
+				return
+			}
+			i += 1
+		}
+		throw MatrixUpdateError.couldNotFindData
+	}
+	
+	// https://stackoverflow.com/questions/53006935/how-to-read-values-of-sparsematrix-double-in-swift-4
+	var array: [[Double]] {
+
+		let rows = Int(self.structure.rowCount)
+		let columns = Int(self.structure.columnCount)
+		let nnz = self.structure.columnStarts[Int(self.structure.columnCount)]
+				
+		var M = Array(repeating: Array(repeating: 0.0, count: columns), count: rows)
+
+		var i = 0
+		var currentColumn: Int = 0
+		var nextColStarts = self.structure.columnStarts[1]
+		while i < nnz {
+			if i == nextColStarts {
+				currentColumn += 1
+				nextColStarts = self.structure.columnStarts[currentColumn + 1]
+			}
+
+			let rowIndex = Int(self.structure.rowIndices[i])
+			M[rowIndex][currentColumn] = self.data[i]
+			i += 1
+		}
+		return M
+	}
+	
+	subscript (row: Int, column: Int) -> Double {
+		get {
+			self.array[row][column]
+		} set {
+			do {
+				try self.updateMatrix(at: row, column: column, with: newValue)
+			} catch {
+				fatalError(error.localizedDescription)
+			}
+		}
+	}
+}
+//public struct SparseMatrix<T: FloatingPoint> {
+//	public var columnCount: Int32
+//	public var rowCount: Int32
+//	public var columnStarts: [Int]
+//	public var rowIndices: [Int32]
+//	public var values: [T]
+//	public var structure: SparseMatrixStructure
+//
+//	public init(_ values: [[T]]) {
+//
+//	}
+//
+//	public init(rowCount: Int32, columnCount: Int32, columnStarts: [Int], rowIndices: [Int32], values: [T], symmetric: Bool, upperTriangle: Bool = true) {
+//		self.columnCount = columnCount
+//		self.rowCount = rowCount
+//		self.columnStarts = columnStarts
+//		self.rowIndices = rowIndices
+//		self.values = values
+//
+//		var attributes = SparseAttributes_t()
+//		if symmetric {
+//			if upperTriangle {
+//				attributes.triangle = SparseUpperTriangle
+//			} else {
+//				attributes.triangle = SparseLowerTriangle
+//			}
+//			attributes.kind = SparseSymmetric
+//		}
+//		self.columnStarts = columnStarts
+//		self.rowIndices = rowIndices
+//		structure = self.rowIndices.withUnsafeMutableBufferPointer { rowIndicesPtr in
+//			self.columnStarts.withUnsafeMutableBufferPointer { columnStartsPtr in
+//				return SparseMatrixStructure(
+//					rowCount: rowCount,
+//					columnCount: columnCount,
+//					columnStarts: columnStartsPtr.baseAddress!,
+//					rowIndices: rowIndicesPtr.baseAddress!,
+//					attributes: attributes,
+//					blockSize: 1
+//				)
+//			}
+//		}
+//	}
+//}
