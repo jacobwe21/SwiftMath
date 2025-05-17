@@ -8,13 +8,13 @@ import Foundation
 import MySwift
 
 public protocol EngineeringUnit: Dimension {
-	associatedtype EngDimension: EngineeringUnit
-	static var allEngineeringUnits: [EngDimension] { get }
+	associatedtype EngrDimension: EngineeringUnit
+	static var allEngineeringUnits: [EngrDimension] { get }
 	static var allEngineeringUnitSymbols: [String] { get }
 	static var allImperialEngineeringUnitSymbols: [String] { get }
 	static var allSIEngineeringUnitSymbols: [String] { get }
-	//static var deafaultImperialUnit: EngDimension { get }
-	//static var deafaultSIUnit: EngDimension { get }
+	//static var defaultImperialUnit: EngDimension { get }
+	//static var defaultSIUnit: EngDimension { get }
 	var positiveOnly: Bool { get }
 	var isImperial: Bool { get }
 }
@@ -23,11 +23,11 @@ public extension EngineeringUnit {
 	static var allEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
 	static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({$0.isImperial}).map({$0.symbol}) }
 	static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({!$0.isImperial}).map({$0.symbol}) }
-	//static var deafaultSIUnit: EngDimension { baseUnit() }
+	//static var defaultSIUnit: EngDimension { baseUnit() }
 }
 
 ///  The inverse (1/x) of `UnitTemperature`
-public class UnitInverseTemperature: Dimension, EngineeringUnit {
+public final class UnitInverseTemperature: Dimension, EngineeringUnit, @unchecked Sendable {
 	public static let allEngineeringUnits: [UnitInverseTemperature] = [.inverseKelvin, .inverseCelsius, .inverseFahrenheit]
 	
 	public static let inverseKelvin = UnitInverseTemperature(symbol: "1/K", converter: UnitConverterLinear(coefficient: 1))
@@ -46,10 +46,10 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 	}
 	public var positiveOnly: Bool { self == .inverseKelvin }
 	
-	class UnitConverterInverting: UnitConverter {
-		var coefficient: Double
-		var constant: Double
-		var doubleInversion: Bool
+	class UnitConverterInverting: UnitConverter, @unchecked Sendable {
+		let coefficient: Double
+		let constant: Double
+		let doubleInversion: Bool
 		init(doubleInversion: Bool = true, coefficient: Double = 1, constant: Double = 0) {
 			self.coefficient = coefficient
 			self.constant = constant
@@ -78,7 +78,7 @@ public class UnitInverseTemperature: Dimension, EngineeringUnit {
 	}
 }
 ///  A unit of measure for density (technically the same as `UnitConcentrationMass`, but kg/m³ is the base unit for density).
-public class UnitDensity: Dimension, EngineeringUnit {
+public final class UnitDensity: Dimension, EngineeringUnit, @unchecked Sendable {
 
 	public static let allEngineeringUnits: [UnitDensity] = [.kilogramPerCubicMeter, .poundsPerCubicFoot]
 	
@@ -99,7 +99,7 @@ public class UnitDensity: Dimension, EngineeringUnit {
 	}
 }
 ///  A unit of measure for force
-public class UnitForce: Dimension, EngineeringUnit {
+public final class UnitForce: Dimension, EngineeringUnit, @unchecked Sendable {
 	public static let newton = UnitForce(symbol: "N", converter: UnitConverterLinear(coefficient: 1.0))
 	public static let kilonewton = UnitForce(symbol: "kN", converter: UnitConverterLinear(coefficient: 1000))
 	public static let pound = UnitForce(symbol: "lb", converter: UnitConverterLinear(coefficient: 4.44822162825))
@@ -117,7 +117,7 @@ public class UnitForce: Dimension, EngineeringUnit {
 	}
 }
 ///  A unit of measure for force distributed over a linear area
-public class UnitLinearForce: Dimension, EngineeringUnit {
+public final class UnitLinearForce: Dimension, EngineeringUnit, @unchecked Sendable {
 	public static let newtonsPerMeter = UnitLinearForce(symbol: "N/m", converter: UnitConverterLinear(coefficient: 1.0))
 	public static let kilonewtonsPerMeter = UnitLinearForce(symbol: "kN/m", converter: UnitConverterLinear(coefficient: 1000))
 	public static let newtonsPerCentimeter = UnitLinearForce(symbol: "N/cm", converter: UnitConverterLinear(coefficient: 100.0))
@@ -141,7 +141,7 @@ public class UnitLinearForce: Dimension, EngineeringUnit {
 	}
 }
 /// A unit of measure for work (force times distance) - Technically the same as the UnitEnergy class
-public class UnitWork: Dimension, EngineeringUnit {
+public final class UnitWork: Dimension, EngineeringUnit, @unchecked Sendable {
 	public static let newtonMeters = UnitWork(symbol: "N•m", converter: UnitConverterLinear(coefficient: 1.0))
 	public static let kilonewtonMeters = UnitWork(symbol: "kN•m", converter: UnitConverterLinear(coefficient: 1000.0))
 	public static let kilonewtonMillimeters = UnitWork(symbol: "kN•mm", converter: UnitConverterLinear(coefficient: 1.0))
@@ -235,7 +235,7 @@ extension UnitVolume: EngineeringUnit {
 		} else { return false }
 	}
 }
-public class UnitTesseract: Dimension, EngineeringUnit {
+public final class UnitTesseract: Dimension, EngineeringUnit, @unchecked Sendable {
 	public static let tesseractMeters = UnitTesseract(symbol: "m⁴", converter: UnitConverterLinear(coefficient: 1))
 	public static let tesseractCentimeters = UnitTesseract(symbol: "cm⁴", converter: UnitConverterLinear(coefficient: 0.00000001))
 	public static let tesseractMillimeters = UnitTesseract(symbol: "mm⁴", converter: UnitConverterLinear(coefficient: 0.000000000001))
@@ -735,7 +735,7 @@ public extension Array where Element == UnitSystem {
 	}
 }
 
-public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
+public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
 	
 	@Environment(\.deviceOS) var os
 	let description: String
@@ -877,7 +877,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		return EngrUnitType.allEngineeringUnits[unitIndex]
 	}
 }
-public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
+public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
 	
 	@Environment(\.deviceOS) var os
 	let description: String
@@ -966,7 +966,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		return EngrUnitType.allEngineeringUnits[unitIndex]
 	}
 }
-public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngDimension {
+public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
 	
 	let description: String
 	@Binding var unit: EngrUnitType
