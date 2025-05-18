@@ -446,12 +446,12 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 //	}
 	
 	// Error types for matrix operations
-	public enum MatrixError: Error {
-		case nonMatchingDimensions
-		case singularMatrix
-		case emptyMatrix
-		case notSquareMatrix
-		case indexOutOfRange
+	public enum MatrixError: String, Error {
+		case nonMatchingDimensions = "Dimensions of matrices do not match."
+		case singularMatrix = "Matrix is singular."
+		case emptyMatrix = "Matrix is empty."
+		case notSquareMatrix = "Matrix is not square, and must be square for this operation."
+		case indexOutOfRange = "Index is out-of-range."
 	}
 	
 	/// Display row count x column count
