@@ -193,6 +193,16 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 		return result
 	}
 	
+	/// Returns the matrix as a single array, only if matrix is a single column or a single row.
+	public func makeVectorArray() throws -> [T] {
+		guard rows == 1 || columns == 1 else { throw MatrixError.nonMatchingDimensions }
+		if rows == 1 {
+			return values[0]
+		} else {
+			return self.transpose().values[0]
+		}
+	}
+	
 	/// Returns the transpose of the matrix (swapping rows for columns)
 	public func transpose() -> Self {
 		guard rows > 0 && columns > 0 else { return self }
