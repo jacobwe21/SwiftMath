@@ -454,9 +454,14 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 		case indexOutOfRange
 	}
 	
+	/// Display row count x column count
+	public var sizeDescription: String {
+		"\(rows)x\(columns)"
+	}
+	
 	/// Convert matrix to a string representation
 	public var description: String {
-		var result = ""
+		var result = "\(rows)x\(columns)\n"
 		for i in 0..<rows {
 			result += "["
 			for j in 0..<columns {
