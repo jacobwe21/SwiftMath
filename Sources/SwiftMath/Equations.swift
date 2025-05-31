@@ -372,7 +372,7 @@ public struct Math {
 			private(set) var degree: Double
 			private(set) var coefficient: Double
 			
-			public init(_ coefficient: Double, xToThe degree: UInt) {
+			public init(_ coefficient: Double, xToThe degree: UInt = 0) {
 				self.degree = Double(degree)
 				self.coefficient = coefficient
 			}
