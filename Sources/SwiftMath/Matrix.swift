@@ -40,6 +40,28 @@ public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible 
 		self.columns = values.first!.count
 		self.values = values
 	}
+	/// Creates a matrix from a single array, either as a row or as a column.
+	public init(_ values: [T], isRow: Bool) {
+		guard !values.isEmpty else {
+			fatalError("Matrix Initialization Failure. Matrix is Empty.")
+		}
+		if isRow {
+			self.rows = 1
+			self.columns = values.count
+			self.values = [values]
+		} else {
+			self.rows = values.count
+			self.columns = 1
+			let initial = [values]
+			var result = [values]
+			for i in 0..<rows {
+				for j in 0..<columns {
+					result[j][i] = initial[i][j]
+				}
+			}
+			self.values = result
+		}
+	}
 	/// Initialize a matrix of size n x m with a default value
 	public init(rows n: Int, columns m: Int, defaultValue: T = 0) {
 		self.values = Array(repeating: Array(repeating: defaultValue, count: m), count: n)
@@ -592,3 +614,276 @@ public extension SparseMatrix_Double {
 //		}
 //	}
 //}
+
+// MARK: System Solving - Test Code Fails
+//	mutating func runAnalysis() throws {
+//		results = nil
+//		let globalMatrixSize: Int32 = nodeCount*3
+////		// Organize entries for the global stiffness matrix. Evaluate element stiffness coefficients for each element, and assign subcript/index (i = Force ID (row), j = Degree of Freedom ID (column))
+////		var memberStiffnessEntries: [SIMD2<Int32>:Double] = [:] // Key is (i,j), Value is Stiffness
+////		for member in members {
+//////			var memberStiffnessValues = member.values
+//////			memberStiffnessValues.withUnsafeMutableBufferPointer { valuesPtr in
+//////				let M = SparseMatrix_Double(structure: member.structureOfMatrix, data: valuesPtr.baseAddress!)
+//////				SparseCleanup(M)
+//////				//memberStiffnessEntries.append()
+//////			}
+////			let memberStiffnessMatrix = member.stiffnessMatrix
+////			for i in memberStiffnessMatrix.indices {
+////				for j in memberStiffnessMatrix[i].indices {
+////					let iNode = i<3 ? member.node1 : member.node2
+////					let iNodeIndex = nodes.firstIndex(of: iNode)!
+////					let forceID: Int32 = Int32(iNodeIndex*3+i%3)
+////					let jNode = j<3 ? member.node1 : member.node2
+////					let jNodeIndex = nodes.firstIndex(of: jNode)!
+////					let dofID: Int32 = Int32(jNodeIndex*3+j%3)
+////					let key = SIMD2(x: forceID, y: dofID)
+////					if let currentValue = memberStiffnessEntries[key] {
+////						memberStiffnessEntries.updateValue(currentValue+memberStiffnessMatrix[i][j], forKey: key)
+////					} else {
+////						memberStiffnessEntries.updateValue(memberStiffnessMatrix[i][j], forKey: key)
+////					}
+////				}
+////			}
+////		}
+////
+////		// Create the global stiffness matrix based on the member stiffnesses.
+////		var row: [Int32] = []
+////		var column: [Int32] = []
+////		var values: [Double] = []
+////		for entry in memberStiffnessEntries {
+////			row.append(entry.key.x)
+////			column.append(entry.key.y)
+////			values.append(entry.value)
+////		}
+////		var attributes = SparseAttributes_t()
+////		let blockCount = values.count
+////		let blockSize = 1
+////		// `SparseConvertFromCoordinate` sums all duplicate entries, assembling the matrix correctly.
+////		let K = SparseConvertFromCoordinate(globalMatrixSize, globalMatrixSize,
+////											blockCount, UInt8(blockSize),
+////											attributes,
+////											&row, &column,
+////											&values)
+//
+//
+//		// Create Kff matrix for displacements
+//		var kffMatrixSize: Int32 = globalMatrixSize
+//		for node in nodes {
+//			if node.supportResistance.forFx { kffMatrixSize -= 1 }
+//			if node.supportResistance.forFy { kffMatrixSize -= 1 }
+//			if node.supportResistance.forMz { kffMatrixSize -= 1 }
+//		}
+//		if kffMatrixSize == globalMatrixSize {
+//			print("Under Constrained. No supports. Singluar Matrix.")
+//			throw AnalysisError.singularMatrix
+//		}
+//		if kffMatrixSize == 0 {
+//			print("Over constrained, stiffness matrix is empty")
+//			throw AnalysisError.overconstrained
+//		}
+//		var stiffnessesForKff: [SIMD2<Int32>:Double] = [:]
+//		var forcesVectorF: [Int32:Double] = [:]
+//		var kffNodeDisplacementDictionary: [Int32:SIMD2<Double>] = [:]
+//		var iSkip: Int = 0
+//		var jSkip: Int = 0
+//		for member in members {
+//			let memberStiffnessMatrix = member.stiffnessMatrix()
+//			for i in 0..<memberStiffnessMatrix.rows {
+//				if i == 0 { if member.node1.supportResistance.forFx { iSkip += 1; continue }}
+//				else if i == 1 { if member.node1.supportResistance.forFy { iSkip += 1; continue }}
+//				else if i == 2 { if member.node1.supportResistance.forMz { iSkip += 1; continue }}
+//				else if i == 3 { if member.node2.supportResistance.forFx { iSkip += 1; continue }}
+//				else if i == 4 { if member.node2.supportResistance.forFy { iSkip += 1; continue }}
+//				else if i == 5 { if member.node2.supportResistance.forMz { iSkip += 1; continue }}
+//				else { throw AnalysisError.indexOutOfRange }
+//				for j in 0..<memberStiffnessMatrix.columns {
+//					if j == 0 { if member.node1.supportResistance.forFx { jSkip += 1; continue }}
+//					else if j == 1 { if member.node1.supportResistance.forFy { jSkip += 1; continue }}
+//					else if j == 2 { if member.node1.supportResistance.forMz { jSkip += 1; continue }}
+//					else if j == 3 { if member.node2.supportResistance.forFx { jSkip += 1; continue }}
+//					else if j == 4 { if member.node2.supportResistance.forFy { jSkip += 1; continue }}
+//					else if j == 5 { if member.node2.supportResistance.forMz { jSkip += 1; continue }}
+//					else { throw AnalysisError.indexOutOfRange }
+//					let iNode = i<3 ? member.node1 : member.node2
+//					let iNodeIndex = nodes.firstIndex(of: iNode)!
+//					let forceID: Int32 = Int32(iNodeIndex*3+i%3-iSkip)
+//					let jNode = j<3 ? member.node1 : member.node2
+//					let jNodeIndex = nodes.firstIndex(of: jNode)!
+//					let dofID: Int32 = Int32(jNodeIndex*3+j%3-jSkip)
+//
+//					let key = SIMD2(x: forceID, y: dofID)
+//					if let currentValue = stiffnessesForKff[key] {
+//						stiffnessesForKff.updateValue(currentValue+memberStiffnessMatrix[i,j], forKey: key)
+//					} else {
+//						stiffnessesForKff.updateValue(memberStiffnessMatrix[i, j], forKey: key)
+//					}
+//
+//					let forceAtNode: Double
+//					if i == 0 { forceAtNode = member.loads1.x }
+//					else if i == 1 { forceAtNode = member.loads1.y }
+//					else if i == 2 { forceAtNode = member.loads1.z }
+//					else if i == 3 { forceAtNode = member.loads2.x }
+//					else if i == 4 { forceAtNode = member.loads2.y }
+//					else if i == 5 { forceAtNode = member.loads2.z }
+//					else { throw AnalysisError.indexOutOfRange }
+//					if let currentValue = forcesVectorF[forceID] {
+//						forcesVectorF.updateValue(currentValue+forceAtNode, forKey: forceID)
+//					} else {
+//						forcesVectorF.updateValue(forceAtNode, forKey: forceID)
+//					}
+//
+//					if j%3 == 0 {
+//						kffNodeDisplacementDictionary.updateValue(jNode.id, forKey: dofID)
+//					}
+//				}
+//			}
+//		}
+//		var rowKff: [Int32] = []
+//		var columnKff: [Int32] = []
+//		var valuesKff: [Double] = []
+//		for entry in stiffnessesForKff {
+//			rowKff.append(entry.key.x)
+//			columnKff.append(entry.key.y)
+//			valuesKff.append(entry.value)
+//		}
+//		let attributesKff = SparseAttributes_t()
+//		let blockCountKff = valuesKff.count
+//		let blockSizeKff = 1
+//		// `SparseConvertFromCoordinate` sums all duplicate entries, assembling the matrix correctly.
+//		let Kff = SparseConvertFromCoordinate(kffMatrixSize, kffMatrixSize,
+//											blockCountKff, UInt8(blockSizeKff),
+//											attributesKff,
+//											&rowKff, &columnKff,
+//											&valuesKff)
+//		let factoredKff = SparseFactor(SparseFactorizationCholesky, Kff)
+//		SparseCleanup(Kff)
+//		SparseCleanup(factoredKff)
+//
+//		// Create Ksf matrix for reaction forces
+//		var stiffnessesForKsf: [SIMD2<Int32>:Double] = [:]
+//		var reactionOffsetVector: [Int32:Double] = [:]
+//		var ksfNodeReactionDictionary: [Int32:SIMD2<Double>] = [:]
+//		iSkip = 0
+//		jSkip = 0
+//		for member in members {
+//			let memberStiffnessMatrix = member.stiffnessMatrix()
+//			for i in 0..<memberStiffnessMatrix.rows {
+//				if i == 0 { if !member.node1.supportResistance.forFx { iSkip += 1; continue }}
+//				else if i == 1 { if !member.node1.supportResistance.forFy { iSkip += 1; continue }}
+//				else if i == 2 { if !member.node1.supportResistance.forMz { iSkip += 1; continue }}
+//				else if i == 3 { if !member.node2.supportResistance.forFx { iSkip += 1; continue }}
+//				else if i == 4 { if !member.node2.supportResistance.forFy { iSkip += 1; continue }}
+//				else if i == 5 { if !member.node2.supportResistance.forMz { iSkip += 1; continue }}
+//				else { throw AnalysisError.indexOutOfRange }
+//				for j in 0..<memberStiffnessMatrix.columns {
+//					if j == 0 { if !member.node1.supportResistance.forFx { jSkip += 1; continue }}
+//					else if j == 1 { if !member.node1.supportResistance.forFy { jSkip += 1; continue }}
+//					else if j == 2 { if !member.node1.supportResistance.forMz { jSkip += 1; continue }}
+//					else if j == 3 { if !member.node2.supportResistance.forFx { jSkip += 1; continue }}
+//					else if j == 4 { if !member.node2.supportResistance.forFy { jSkip += 1; continue }}
+//					else if j == 5 { if !member.node2.supportResistance.forMz { jSkip += 1; continue }}
+//					else { throw AnalysisError.indexOutOfRange }
+//					let iNode = i<3 ? member.node1 : member.node2
+//					let iNodeIndex = nodes.firstIndex(of: iNode)!
+//					let forceID: Int32 = Int32(iNodeIndex*3+i%3-iSkip)
+//					let jNode = j<3 ? member.node1 : member.node2
+//					let jNodeIndex = nodes.firstIndex(of: jNode)!
+//					let dofID: Int32 = Int32(jNodeIndex*3+j%3-jSkip)
+//
+//					let key = SIMD2(x: forceID, y: dofID)
+//					if let currentValue = stiffnessesForKsf[key] {
+//						stiffnessesForKsf.updateValue(currentValue+memberStiffnessMatrix[i, j], forKey: key)
+//					} else {
+//						stiffnessesForKsf.updateValue(memberStiffnessMatrix[i, j], forKey: key)
+//					}
+//
+//					let forceAtNode: Double
+//					if i == 0 { forceAtNode = member.loads1.x }
+//					else if i == 1 { forceAtNode = member.loads1.y }
+//					else if i == 2 { forceAtNode = member.loads1.z }
+//					else if i == 3 { forceAtNode = member.loads2.x }
+//					else if i == 4 { forceAtNode = member.loads2.y }
+//					else if i == 5 { forceAtNode = member.loads2.z }
+//					else { throw AnalysisError.indexOutOfRange }
+//					if let currentValue = forcesVectorF[forceID] {
+//						reactionOffsetVector.updateValue(currentValue+forceAtNode, forKey: forceID)
+//					} else {
+//						reactionOffsetVector.updateValue(forceAtNode, forKey: forceID)
+//					}
+//
+//					if i%3 == 0 {
+//						ksfNodeReactionDictionary.updateValue(iNode.id, forKey: forceID)
+//					}
+//				}
+//			}
+//		}
+//		// Solve for reactions using Ksf matrix and displacements vector
+//		let ksfMatrixSize = globalMatrixSize - kffMatrixSize
+//		var rowKsf: [Int32] = []
+//		var columnKsf: [Int32] = []
+//		var valuesKsf: [Double] = []
+//		for entry in stiffnessesForKsf {
+//			rowKsf.append(entry.key.x)
+//			columnKsf.append(entry.key.y)
+//			valuesKsf.append(entry.value)
+//		}
+//		let attributesKsf = SparseAttributes_t()
+//		let blockCountKsf = valuesKsf.count
+//		let blockSizeKsf = 1
+//		let Ksf = SparseConvertFromCoordinate(ksfMatrixSize, ksfMatrixSize,
+//											blockCountKsf, UInt8(blockSizeKsf),
+//											attributesKsf,
+//											&rowKsf, &columnKsf,
+//											&valuesKsf)
+//		SparseCleanup(Ksf)
+//
+//		// Perform matrix operations using Kff and Ksf
+//		guard forcesVectorF.count == kffMatrixSize else {
+//			print("forcesVectorF != kffMatrixSize"); throw AnalysisError.matrixSizeMisMatch
+//		}
+//		guard reactionOffsetVector.count == ksfMatrixSize else {
+//			print("forcesVectorF != kffMatrixSize"); throw AnalysisError.matrixSizeMisMatch
+//		}
+//		var forcesVectorFValues: [Double] = Array(forcesVectorF.values)
+//		let reactionOffsetVectorValues: [Double] = Array(reactionOffsetVector.values)
+//		var displacements: [Double] = Array(repeating: 0, count: Int(kffMatrixSize))
+//		var reactions: [Double] = Array(repeating: 0, count: reactionOffsetVectorValues.count)
+//		forcesVectorFValues.withUnsafeMutableBufferPointer { bPtr in
+//			// Forces
+//			let b = DenseVector_Double(count: kffMatrixSize,
+//											data: bPtr.baseAddress!)
+//			displacements.withUnsafeMutableBufferPointer { xPtr in
+//				// Displacements
+//				let x = DenseVector_Double(count: kffMatrixSize, data: xPtr.baseAddress!)
+//				SparseSolve(factoredKff, b, x) // Solve for displacements
+//
+//				reactions.withUnsafeMutableBufferPointer { xPtr in
+//					let y: DenseVector_Double = DenseVector_Double(count: ksfMatrixSize, data: xPtr.baseAddress!)
+//					SparseMultiply(Ksf,x,y) // Multiply for reactions
+//				}
+//			}
+//		}
+//		// Adjust reactions
+//		for i in reactions.indices {
+//			reactions[i] = reactions[i] + reactionOffsetVectorValues[i]
+//		}
+//		SparseCleanup(Kff)
+//		SparseCleanup(Ksf)
+//
+//		var nodeDisplacements: [SIMD2<Double>:SIMD3<Double>] = [:]
+//		for i in displacements.indices {
+//			if let item = kffNodeDisplacementDictionary[Int32(i)] {
+//				let d = SIMD3(displacements[i], displacements[i+1], displacements[i+2])
+//				nodeDisplacements.updateValue(d, forKey: item)
+//			}
+//		}
+//		var nodeReactions: [SIMD2<Double>:SIMD3<Double>] = [:]
+//		for i in reactions.indices {
+//			if let item = ksfNodeReactionDictionary[Int32(i)] {
+//				let r = SIMD3(reactions[i], reactions[i+1], reactions[i+2])
+//				nodeReactions.updateValue(r, forKey: item)
+//			}
+//		}
+//		results = Results(displacements: nodeDisplacements, reactions: nodeReactions)
+//	}
