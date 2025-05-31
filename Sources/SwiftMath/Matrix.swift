@@ -52,14 +52,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 		} else {
 			self.rows = values.count
 			self.columns = 1
-			let initial = [values]
-			var result = [values]
-			for i in 0..<rows {
-				for j in 0..<columns {
-					result[j][i] = initial[i][j]
-				}
-			}
-			self.values = result
+			self.values = values.map({[$0]})
 		}
 	}
 	/// Initialize a matrix of size n x m with a default value
