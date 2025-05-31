@@ -8,7 +8,7 @@ import Foundation
 import simd
 import Accelerate
 
-public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible {
+public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible {
 	
 	public let rows: Int
 	public let columns: Int
