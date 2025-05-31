@@ -125,6 +125,20 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 		return (0..<rows).map { values[$0][index] }
 	}
 	
+	/// Returns `true` if both matrices are approximately equivalent to 10^-4
+	public static func ~= (lhs: Matrix<T>, rhs: Matrix<T>) -> Bool {
+		guard lhs.sizeDescription == rhs.sizeDescription else { return false }
+		let result = try! lhs - rhs
+		for r in 0..<lhs.rows {
+			for c in 0..<lhs.columns {
+				if abs(result.values[r][c]) > 0.0001 {
+					return false
+				}
+			}
+		}
+		return true
+	}
+	
 	/// Elementwise addition
 	public static func + (lhs: Matrix<T>, rhs: Matrix<T>) throws -> Matrix<T> {
 		guard Matrix.areDimensionsEqual(lhs: lhs, rhs: rhs) else { throw MatrixError.nonMatchingDimensions }
