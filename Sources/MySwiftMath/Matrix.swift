@@ -7,13 +7,20 @@
 import Foundation
 import simd
 import Accelerate
+//import Surge
 
 public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible {
 	
 	public let rows: Int
 	public let columns: Int
 	public private(set) var values: [[T]]
+	public var flatValues: [T] { values.flatMap(\.self) }
 	
+	public init<V>(_ matrix: Matrix<V>) where V: BinaryFloatingPoint {
+		self.rows = matrix.rows
+		self.columns = matrix.columns
+		self.values = matrix.values.map({ Array<T>($0.map({T($0)}))})
+	}
 	/// Creates a matrix where the outer array is for rows and the inner array is for columns. Throws errors.
 	public init(_ values: [[T]], mustBeSquare: Bool) throws {
 		guard !values.isEmpty else {
@@ -40,7 +47,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 		self.columns = values.first!.count
 		self.values = values
 	}
-	/// Creates a matrix from a single array, either as a row or as a column.
+	/// Creates a matrix from a single "vector" array, either as a row or as a column.
 	public init(_ values: [T], isRow: Bool) {
 		guard !values.isEmpty else {
 			fatalError("Matrix Initialization Failure. Matrix is Empty.")
@@ -55,6 +62,26 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 			self.values = values.map({[$0]})
 		}
 	}
+	
+	/// Creates a matrix from a single array
+	/// - Parameters:
+	///   - rows: The number of rows
+	///   - columns: The number of columns
+	///   - values: The data in row-major (row, column) formation
+	public init(rows: Int, columns: Int, values: [T]) {
+		precondition(values.count == rows * columns)
+		self.rows = rows
+		self.columns = columns
+		self.values = {
+			var result: [[T]] = Array(repeating: Array(repeating: 0, count: columns), count: rows)
+			for r in 0..<rows {
+				for c in 0..<columns {
+					result[r][c] = values[r * columns + c]
+				}
+			}
+			return result
+		}()
+	}
 	/// Initialize a matrix of size n x m with a default value
 	public init(rows n: Int, columns m: Int, defaultValue: T = 0) {
 		self.values = Array(repeating: Array(repeating: defaultValue, count: m), count: n)
@@ -66,14 +93,44 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 		self.values = Array(repeating: Array(repeating: defaultValue, count: n), count: n)
 		self.rows = n; self.columns = n
 	}
-	/// Return the identity matrix of the same size
-	public static func identity(size n: Int) -> Matrix<T> {
-		var result = Matrix<T>(size: n)
-		for i in 0..<n {
-			result[i, i] = 1 as! T
+	
+	public init(rows: Int, columns: Int, _ closure: (_ row: Int, _ column: Int) throws -> T) rethrows {
+		var grid: [T] = []
+		grid.reserveCapacity(rows * columns)
+
+		for row in 0..<rows {
+			for column in 0..<columns {
+				grid.append(try closure(row, column))
+			}
 		}
-		return result
+
+		self.init(rows: rows, columns: columns, values: grid)
 	}
+
+	public static func identity(size: Int) -> Matrix<T> {
+		return self.diagonal(rows: size, columns: size, defaultValue: 1.0)
+	}
+	public static func eyeMatrix(rows: Int, columns: Int) -> Matrix<T> {
+		return self.diagonal(rows: rows, columns: columns, defaultValue: 1.0)
+	}
+	public static func diagonal(rows: Int, columns: Int, defaultValue: T) -> Matrix<T> {
+		let count = Swift.min(rows, columns)
+		let scalars = repeatElement(defaultValue, count: count)
+		return self.diagonal(rows: rows, columns: columns, scalars: scalars)
+	}
+	public static func diagonal<C>(rows: Int, columns: Int, scalars: C) -> Matrix<T> where C: Collection, C.Element == T {
+		var matrix = self.init(rows: rows, columns: columns, defaultValue: 0.0)
+
+		let count = Swift.min(rows, columns)
+		precondition(scalars.count == count)
+
+		for (i, scalar) in scalars.enumerated() {
+			matrix[i, i] = scalar
+		}
+
+		return matrix
+	}
+
 	public init(_ simdMatrix: simd_double2x2) where T == Double {
 		self.rows = 2
 		self.columns = 2
@@ -241,6 +298,10 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 				result.values[j][i] = self.values[i][j]
 			}
 		}
+//		var result = Matrix<T>(rows: columns, columns: rows)
+//		result.flatValues.withUnsafeMutableBufferPointer { pointer in
+//			vDSP_mtransD(flatValues, 1, pointer.baseAddress!, 1, vDSP_Length(columns), vDSP_Length(rows))
+//		}
 		return result
 	}
 	
@@ -460,6 +521,112 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 			values[i][j] = newValue
 		}
 	}
+	// ALTERNATE Subscripts for flatValues formulation.
+//	public subscript(row: Int, column: Int) -> T {
+//		get {
+//			assert(isValidIndex(row: row, col: column))
+//			return flatValues[(row * columns) + column]
+//		}
+//		set {
+//			assert(isValidIndex(row: row, col: column))
+//			flatValues[(row * columns) + column] = newValue
+//		}
+//	}
+//	public subscript(row row: Int) -> [T] {
+//		get {
+//			assert(row < rows)
+//			let startIndex = row * columns
+//			let endIndex = row * columns + columns
+//			return Array(grid[startIndex..<endIndex])
+//		}
+//
+//		set {
+//			assert(row < rows)
+//			assert(newValue.count == columns)
+//			let startIndex = row * columns
+//			let endIndex = row * columns + columns
+//			grid.replaceSubrange(startIndex..<endIndex, with: newValue)
+//		}
+//	}
+//	public subscript(column column: Int) -> [T] {
+//		get {
+//			var result = [T](repeating: 0.0, count: rows)
+//			for i in 0..<rows {
+//				let index = i * columns + column
+//				result[i] = self.grid[index]
+//			}
+//			return result
+//		}
+//
+//		set {
+//			assert(column < columns)
+//			assert(newValue.count == rows)
+//			for i in 0..<rows {
+//				let index = i * columns + column
+//				grid[index] = newValue[i]
+//			}
+//		}
+//	}
+	
+	//public func eigenvalues(maxIterations: Int = 100, tolerance: Double = 1e-10) throws -> [(x: T, i: T)] {
+	public func eigenvalues(maxIterations: Int = 100, tolerance: Double = 1e-10) throws -> [(x: T, i: T)] {
+		guard isSquare else { throw MatrixError.notSquareMatrix }
+		if rows == 1 {
+			return values[0][0].isNaN ? [] : [((values[0][0]), T(0))]
+		}
+		if rows == 2 {
+			let a = values[0][0]
+			let b = values[0][1]
+			let c = values[1][0]
+			let d = values[1][1]
+
+			let trace = a + d
+			let determinant = a * d - b * c
+			let discriminant = trace * trace - 4 * determinant
+
+			if discriminant >= 0 {
+				let sqrtDiscriminant = discriminant.squareRoot()
+				let lambda1 = (trace + sqrtDiscriminant) / 2
+				let lambda2 = (trace - sqrtDiscriminant) / 2
+				return [(lambda1,0.0), (lambda2,0.0)]
+			}
+		}
+		return try eigenDecompose(computeEigenVectors: false).eigenValues
+	}
+	
+	// UNTESTED - written by AI
+	func qrDecompose(_ A: [[T]]) -> (Q: [[T]], R: [[T]]) {
+		let n = A.count
+		let m = A[0].count
+		var Q: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: n)
+		var R: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: m)
+
+		var A = A // Copy
+		for k in 0..<m {
+			var norm: T = 0.0
+			for i in 0..<n {
+				norm += A[i][k] * A[i][k]
+			}
+			norm = sqrt(norm)
+			for i in 0..<n {
+				Q[i][k] = A[i][k] / norm
+			}
+			R[k][k] = norm
+
+			for j in (k+1)..<m {
+				var dot: T = 0.0
+				for i in 0..<n {
+					dot += Q[i][k] * A[i][j]
+				}
+				R[k][j] = dot
+				for i in 0..<n {
+					A[i][j] -= Q[i][k] * dot
+				}
+			}
+		}
+		return (Q, R)
+	}
+	
 //	/// Fetches or updates a value in the matrix. Returns `nil` if out-of-range, and does nothing when setting a value if out-of-range or if new value is `nil`.
 //	public subscript(i: Int, j: Int) -> T? {
 //		get {
@@ -481,6 +648,8 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 		case emptyMatrix = "Matrix is empty."
 		case notSquareMatrix = "Matrix is not square, and must be square for this operation."
 		case indexOutOfRange = "Index is out-of-range."
+		case computationFailure = "Computational Failure"
+		case matrixNotDecomposable = "Matrix not Decomposable"
 	}
 	
 	/// Display row count x column count
@@ -502,6 +671,146 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 			result += "]\n"
 		}
 		return result
+	}
+	
+	/// Decomposes a square matrix into its eigenvalues and left and right eigenvectors.
+	/// The decomposition may result in complex numbers, represented by (T, T), which
+	///   are the (real, imaginary) parts of the complex number.
+	/// - Returns: a struct with the eigen values and left and right eigen vectors using (T, T)
+	///   to represent a complex number.
+	func eigenDecompose(computeEigenVectors: Bool) throws -> MatrixEigenDecompositionResult<T> {
+		let input = Matrix<Double>(self)
+		let decomposition = try eigenDecompose(input, computeEigenVectors: computeEigenVectors)
+		return MatrixEigenDecompositionResult<T>(
+			eigenValues: decomposition.eigenValues.map { (T($0.0), T($0.1)) },
+			leftEigenVectors: decomposition.leftEigenVectors.map { $0.map { (T($0.0), T($0.1)) } },
+			rightEigenVectors: decomposition.rightEigenVectors.map { $0.map { (T($0.0), T($0.1)) } }
+		)
+	}
+
+	/// Decomposes a square matrix into its eigenvalues and left and right eigenvectors.
+	/// The decomposition may result in complex numbers, represented by (Double, Double), which
+	///   are the (real, imaginary) parts of the complex number.
+	/// - Parameters:
+	///   - lhs: a square matrix
+	/// - Returns: a struct with the eigen values and left and right eigen vectors using (Double, Double)
+	///   to represent a complex number.
+	func eigenDecompose(_ lhs: Matrix<Double>, computeEigenVectors: Bool) throws -> MatrixEigenDecompositionResult<Double> {
+		
+		guard lhs.rows == lhs.columns else {
+			throw MatrixError.notSquareMatrix
+		}
+
+		// dgeev_ needs column-major matrices, so transpose 'lhs'.
+		var matrixGrid: [__CLPK_doublereal] = lhs.transpose().flatValues
+		var matrixRowCount = __CLPK_integer(lhs.rows)
+		let matrixColCount = matrixRowCount
+		var eigenValueCount = matrixRowCount
+		var leftEigenVectorCount = matrixRowCount
+		var rightEigenVectorCount = matrixRowCount
+
+		var workspaceQuery: Double = 0.0
+		var workspaceSize = __CLPK_integer(-1)
+		var error: __CLPK_integer = 0
+
+		var eigenValueRealParts = [Double](repeating: 0, count: Int(eigenValueCount))
+		var eigenValueImaginaryParts = [Double](repeating: 0, count: Int(eigenValueCount))
+		var leftEigenVectorWork = [Double](repeating: 0, count: Int(leftEigenVectorCount * matrixColCount))
+		var rightEigenVectorWork = [Double](repeating: 0, count: Int(rightEigenVectorCount * matrixColCount))
+
+		var decompositionJobVL: [CChar]
+		var decompositionJobVR: [CChar]
+		
+		if computeEigenVectors  {
+			decompositionJobVL = [0x56, 0x00] // "V" (compute)
+			decompositionJobVR = [0x56, 0x00] // "V" (compute)
+		} else {
+			decompositionJobVL = Array("N".utf8CString) // "N" (do not compute)
+			decompositionJobVR = Array("N".utf8CString) // "N" (do not compute)
+		}
+
+		// Call dgeev to find out how much workspace to allocate
+		dgeev_(&decompositionJobVL, &decompositionJobVR, &matrixRowCount, &matrixGrid, &eigenValueCount, &eigenValueRealParts, &eigenValueImaginaryParts, &leftEigenVectorWork, &leftEigenVectorCount, &rightEigenVectorWork, &rightEigenVectorCount, &workspaceQuery, &workspaceSize, &error)
+		if error != 0 {
+			throw MatrixError.matrixNotDecomposable
+		}
+
+		// Allocate the workspace and call dgeev again to do the actual decomposition
+		var workspace = [Double](repeating: 0.0, count: Int(workspaceQuery))
+		workspaceSize = __CLPK_integer(workspaceQuery)
+		dgeev_(&decompositionJobVL, &decompositionJobVR, &matrixRowCount, &matrixGrid, &eigenValueCount, &eigenValueRealParts, &eigenValueImaginaryParts, &leftEigenVectorWork, &leftEigenVectorCount, &rightEigenVectorWork, &rightEigenVectorCount, &workspace, &workspaceSize, &error)
+		if error != 0 {
+			throw MatrixError.matrixNotDecomposable
+		}
+
+		return MatrixEigenDecompositionResult<Double>(rowCount: lhs.rows, eigenValueRealParts: eigenValueRealParts, eigenValueImaginaryParts: eigenValueImaginaryParts, leftEigenVectorWork: leftEigenVectorWork, rightEigenVectorWork: rightEigenVectorWork)
+	}
+	
+	/// Holds the result of eigendecomposition. The (Scalar, Scalar) used
+	/// in the property types represents a complex number with (real, imaginary) parts.
+	struct MatrixEigenDecompositionResult<Scalar: BinaryFloatingPoint> {
+		public let eigenValues: [(Scalar, Scalar)]
+		public let leftEigenVectors: [[(Scalar, Scalar)]]
+		public let rightEigenVectors: [[(Scalar, Scalar)]]
+		
+		public init(eigenValues: [(Scalar, Scalar)], leftEigenVectors: [[(Scalar, Scalar)]], rightEigenVectors: [[(Scalar, Scalar)]]) {
+			self.eigenValues = eigenValues
+			self.leftEigenVectors = leftEigenVectors
+			self.rightEigenVectors = rightEigenVectors
+		}
+		
+		public init(rowCount: Int, eigenValueRealParts: [Scalar], eigenValueImaginaryParts: [Scalar], leftEigenVectorWork: [Scalar], rightEigenVectorWork: [Scalar]) {
+			// The eigenvalues are an array of (real, imaginary) results from dgeev
+			self.eigenValues = Array(zip(eigenValueRealParts, eigenValueImaginaryParts))
+			
+			// Build the left and right eigenvectors
+			let emptyVector = [(Scalar, Scalar)](repeating: (0.0, 0.0), count: rowCount)
+			var leftEigenVectors = [[(Scalar, Scalar)]](repeating: emptyVector, count: rowCount)
+			MatrixEigenDecompositionResult.buildEigenVector(eigenValueImaginaryParts: eigenValueImaginaryParts, eigenVectorWork: leftEigenVectorWork, result: &leftEigenVectors)
+			
+			var rightEigenVectors = [[(Scalar, Scalar)]](repeating: emptyVector, count: rowCount)
+			MatrixEigenDecompositionResult.buildEigenVector(eigenValueImaginaryParts: eigenValueImaginaryParts, eigenVectorWork: rightEigenVectorWork, result: &rightEigenVectors)
+			
+			self.leftEigenVectors = leftEigenVectors
+			self.rightEigenVectors = rightEigenVectors
+		}
+		
+		// Convert the result of dgeev into an array of complex numbers
+		// See Intel's documentation on column-major results for sample code that this is based on:
+		// https://software.intel.com/sites/products/documentation/doclib/mkl_sa/11/mkl_lapack_examples/dgeev.htm
+		private static func buildEigenVector<S>(eigenValueImaginaryParts: [S], eigenVectorWork: [S], result: inout [[(S, S)]]) where S: FloatingPoint & ExpressibleByFloatLiteral {
+			// row and col count are the same because result must be square.
+			let rowColCount = result.count
+
+			for row in 0..<rowColCount {
+				var col = 0
+				while col < rowColCount {
+					if eigenValueImaginaryParts[col] == 0.0 {
+						// v is column-major
+						result[row][col] = (eigenVectorWork[row + rowColCount * col], 0.0)
+						col += 1
+					} else {
+						// v is column-major
+						result[row][col] = (eigenVectorWork[row + col * rowColCount], eigenVectorWork[row + rowColCount * (col + 1)])
+						result[row][col + 1] = (eigenVectorWork[row + col * rowColCount], -eigenVectorWork[row + rowColCount * (col + 1)])
+						col += 2
+					}
+				}
+			}
+		}
+
+	}
+}
+extension Matrix: Collection {
+	public subscript(_ row: Int) -> ArraySlice<T> {
+		let startIndex = row * columns
+		let endIndex = startIndex + columns
+		return self.flatValues[startIndex..<endIndex]
+	}
+	public var startIndex: Int { return 0 }
+	public var endIndex: Int { return self.rows }
+	public func index(after i: Int) -> Int {
+		return i + 1
 	}
 }
 
@@ -577,6 +886,7 @@ public extension SparseMatrix_Double {
 		}
 	}
 }
+
 //public struct SparseMatrix<T: FloatingPoint> {
 //	public var columnCount: Int32
 //	public var rowCount: Int32
@@ -622,275 +932,25 @@ public extension SparseMatrix_Double {
 //	}
 //}
 
-// MARK: System Solving - Test Code Fails
-//	mutating func runAnalysis() throws {
-//		results = nil
-//		let globalMatrixSize: Int32 = nodeCount*3
-////		// Organize entries for the global stiffness matrix. Evaluate element stiffness coefficients for each element, and assign subcript/index (i = Force ID (row), j = Degree of Freedom ID (column))
-////		var memberStiffnessEntries: [SIMD2<Int32>:Double] = [:] // Key is (i,j), Value is Stiffness
-////		for member in members {
-//////			var memberStiffnessValues = member.values
-//////			memberStiffnessValues.withUnsafeMutableBufferPointer { valuesPtr in
-//////				let M = SparseMatrix_Double(structure: member.structureOfMatrix, data: valuesPtr.baseAddress!)
-//////				SparseCleanup(M)
-//////				//memberStiffnessEntries.append()
-//////			}
-////			let memberStiffnessMatrix = member.stiffnessMatrix
-////			for i in memberStiffnessMatrix.indices {
-////				for j in memberStiffnessMatrix[i].indices {
-////					let iNode = i<3 ? member.node1 : member.node2
-////					let iNodeIndex = nodes.firstIndex(of: iNode)!
-////					let forceID: Int32 = Int32(iNodeIndex*3+i%3)
-////					let jNode = j<3 ? member.node1 : member.node2
-////					let jNodeIndex = nodes.firstIndex(of: jNode)!
-////					let dofID: Int32 = Int32(jNodeIndex*3+j%3)
-////					let key = SIMD2(x: forceID, y: dofID)
-////					if let currentValue = memberStiffnessEntries[key] {
-////						memberStiffnessEntries.updateValue(currentValue+memberStiffnessMatrix[i][j], forKey: key)
-////					} else {
-////						memberStiffnessEntries.updateValue(memberStiffnessMatrix[i][j], forKey: key)
-////					}
-////				}
-////			}
-////		}
-////
-////		// Create the global stiffness matrix based on the member stiffnesses.
-////		var row: [Int32] = []
-////		var column: [Int32] = []
-////		var values: [Double] = []
-////		for entry in memberStiffnessEntries {
-////			row.append(entry.key.x)
-////			column.append(entry.key.y)
-////			values.append(entry.value)
-////		}
-////		var attributes = SparseAttributes_t()
-////		let blockCount = values.count
-////		let blockSize = 1
-////		// `SparseConvertFromCoordinate` sums all duplicate entries, assembling the matrix correctly.
-////		let K = SparseConvertFromCoordinate(globalMatrixSize, globalMatrixSize,
-////											blockCount, UInt8(blockSize),
-////											attributes,
-////											&row, &column,
-////											&values)
+// Surge MIT License:
+
+//Copyright © 2014-2019 the Surge contributors
 //
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
 //
-//		// Create Kff matrix for displacements
-//		var kffMatrixSize: Int32 = globalMatrixSize
-//		for node in nodes {
-//			if node.supportResistance.forFx { kffMatrixSize -= 1 }
-//			if node.supportResistance.forFy { kffMatrixSize -= 1 }
-//			if node.supportResistance.forMz { kffMatrixSize -= 1 }
-//		}
-//		if kffMatrixSize == globalMatrixSize {
-//			print("Under Constrained. No supports. Singluar Matrix.")
-//			throw AnalysisError.singularMatrix
-//		}
-//		if kffMatrixSize == 0 {
-//			print("Over constrained, stiffness matrix is empty")
-//			throw AnalysisError.overconstrained
-//		}
-//		var stiffnessesForKff: [SIMD2<Int32>:Double] = [:]
-//		var forcesVectorF: [Int32:Double] = [:]
-//		var kffNodeDisplacementDictionary: [Int32:SIMD2<Double>] = [:]
-//		var iSkip: Int = 0
-//		var jSkip: Int = 0
-//		for member in members {
-//			let memberStiffnessMatrix = member.stiffnessMatrix()
-//			for i in 0..<memberStiffnessMatrix.rows {
-//				if i == 0 { if member.node1.supportResistance.forFx { iSkip += 1; continue }}
-//				else if i == 1 { if member.node1.supportResistance.forFy { iSkip += 1; continue }}
-//				else if i == 2 { if member.node1.supportResistance.forMz { iSkip += 1; continue }}
-//				else if i == 3 { if member.node2.supportResistance.forFx { iSkip += 1; continue }}
-//				else if i == 4 { if member.node2.supportResistance.forFy { iSkip += 1; continue }}
-//				else if i == 5 { if member.node2.supportResistance.forMz { iSkip += 1; continue }}
-//				else { throw AnalysisError.indexOutOfRange }
-//				for j in 0..<memberStiffnessMatrix.columns {
-//					if j == 0 { if member.node1.supportResistance.forFx { jSkip += 1; continue }}
-//					else if j == 1 { if member.node1.supportResistance.forFy { jSkip += 1; continue }}
-//					else if j == 2 { if member.node1.supportResistance.forMz { jSkip += 1; continue }}
-//					else if j == 3 { if member.node2.supportResistance.forFx { jSkip += 1; continue }}
-//					else if j == 4 { if member.node2.supportResistance.forFy { jSkip += 1; continue }}
-//					else if j == 5 { if member.node2.supportResistance.forMz { jSkip += 1; continue }}
-//					else { throw AnalysisError.indexOutOfRange }
-//					let iNode = i<3 ? member.node1 : member.node2
-//					let iNodeIndex = nodes.firstIndex(of: iNode)!
-//					let forceID: Int32 = Int32(iNodeIndex*3+i%3-iSkip)
-//					let jNode = j<3 ? member.node1 : member.node2
-//					let jNodeIndex = nodes.firstIndex(of: jNode)!
-//					let dofID: Int32 = Int32(jNodeIndex*3+j%3-jSkip)
+//The above copyright notice and this permission notice shall be included in
+//all copies or substantial portions of the Software.
 //
-//					let key = SIMD2(x: forceID, y: dofID)
-//					if let currentValue = stiffnessesForKff[key] {
-//						stiffnessesForKff.updateValue(currentValue+memberStiffnessMatrix[i,j], forKey: key)
-//					} else {
-//						stiffnessesForKff.updateValue(memberStiffnessMatrix[i, j], forKey: key)
-//					}
-//
-//					let forceAtNode: Double
-//					if i == 0 { forceAtNode = member.loads1.x }
-//					else if i == 1 { forceAtNode = member.loads1.y }
-//					else if i == 2 { forceAtNode = member.loads1.z }
-//					else if i == 3 { forceAtNode = member.loads2.x }
-//					else if i == 4 { forceAtNode = member.loads2.y }
-//					else if i == 5 { forceAtNode = member.loads2.z }
-//					else { throw AnalysisError.indexOutOfRange }
-//					if let currentValue = forcesVectorF[forceID] {
-//						forcesVectorF.updateValue(currentValue+forceAtNode, forKey: forceID)
-//					} else {
-//						forcesVectorF.updateValue(forceAtNode, forKey: forceID)
-//					}
-//
-//					if j%3 == 0 {
-//						kffNodeDisplacementDictionary.updateValue(jNode.id, forKey: dofID)
-//					}
-//				}
-//			}
-//		}
-//		var rowKff: [Int32] = []
-//		var columnKff: [Int32] = []
-//		var valuesKff: [Double] = []
-//		for entry in stiffnessesForKff {
-//			rowKff.append(entry.key.x)
-//			columnKff.append(entry.key.y)
-//			valuesKff.append(entry.value)
-//		}
-//		let attributesKff = SparseAttributes_t()
-//		let blockCountKff = valuesKff.count
-//		let blockSizeKff = 1
-//		// `SparseConvertFromCoordinate` sums all duplicate entries, assembling the matrix correctly.
-//		let Kff = SparseConvertFromCoordinate(kffMatrixSize, kffMatrixSize,
-//											blockCountKff, UInt8(blockSizeKff),
-//											attributesKff,
-//											&rowKff, &columnKff,
-//											&valuesKff)
-//		let factoredKff = SparseFactor(SparseFactorizationCholesky, Kff)
-//		SparseCleanup(Kff)
-//		SparseCleanup(factoredKff)
-//
-//		// Create Ksf matrix for reaction forces
-//		var stiffnessesForKsf: [SIMD2<Int32>:Double] = [:]
-//		var reactionOffsetVector: [Int32:Double] = [:]
-//		var ksfNodeReactionDictionary: [Int32:SIMD2<Double>] = [:]
-//		iSkip = 0
-//		jSkip = 0
-//		for member in members {
-//			let memberStiffnessMatrix = member.stiffnessMatrix()
-//			for i in 0..<memberStiffnessMatrix.rows {
-//				if i == 0 { if !member.node1.supportResistance.forFx { iSkip += 1; continue }}
-//				else if i == 1 { if !member.node1.supportResistance.forFy { iSkip += 1; continue }}
-//				else if i == 2 { if !member.node1.supportResistance.forMz { iSkip += 1; continue }}
-//				else if i == 3 { if !member.node2.supportResistance.forFx { iSkip += 1; continue }}
-//				else if i == 4 { if !member.node2.supportResistance.forFy { iSkip += 1; continue }}
-//				else if i == 5 { if !member.node2.supportResistance.forMz { iSkip += 1; continue }}
-//				else { throw AnalysisError.indexOutOfRange }
-//				for j in 0..<memberStiffnessMatrix.columns {
-//					if j == 0 { if !member.node1.supportResistance.forFx { jSkip += 1; continue }}
-//					else if j == 1 { if !member.node1.supportResistance.forFy { jSkip += 1; continue }}
-//					else if j == 2 { if !member.node1.supportResistance.forMz { jSkip += 1; continue }}
-//					else if j == 3 { if !member.node2.supportResistance.forFx { jSkip += 1; continue }}
-//					else if j == 4 { if !member.node2.supportResistance.forFy { jSkip += 1; continue }}
-//					else if j == 5 { if !member.node2.supportResistance.forMz { jSkip += 1; continue }}
-//					else { throw AnalysisError.indexOutOfRange }
-//					let iNode = i<3 ? member.node1 : member.node2
-//					let iNodeIndex = nodes.firstIndex(of: iNode)!
-//					let forceID: Int32 = Int32(iNodeIndex*3+i%3-iSkip)
-//					let jNode = j<3 ? member.node1 : member.node2
-//					let jNodeIndex = nodes.firstIndex(of: jNode)!
-//					let dofID: Int32 = Int32(jNodeIndex*3+j%3-jSkip)
-//
-//					let key = SIMD2(x: forceID, y: dofID)
-//					if let currentValue = stiffnessesForKsf[key] {
-//						stiffnessesForKsf.updateValue(currentValue+memberStiffnessMatrix[i, j], forKey: key)
-//					} else {
-//						stiffnessesForKsf.updateValue(memberStiffnessMatrix[i, j], forKey: key)
-//					}
-//
-//					let forceAtNode: Double
-//					if i == 0 { forceAtNode = member.loads1.x }
-//					else if i == 1 { forceAtNode = member.loads1.y }
-//					else if i == 2 { forceAtNode = member.loads1.z }
-//					else if i == 3 { forceAtNode = member.loads2.x }
-//					else if i == 4 { forceAtNode = member.loads2.y }
-//					else if i == 5 { forceAtNode = member.loads2.z }
-//					else { throw AnalysisError.indexOutOfRange }
-//					if let currentValue = forcesVectorF[forceID] {
-//						reactionOffsetVector.updateValue(currentValue+forceAtNode, forKey: forceID)
-//					} else {
-//						reactionOffsetVector.updateValue(forceAtNode, forKey: forceID)
-//					}
-//
-//					if i%3 == 0 {
-//						ksfNodeReactionDictionary.updateValue(iNode.id, forKey: forceID)
-//					}
-//				}
-//			}
-//		}
-//		// Solve for reactions using Ksf matrix and displacements vector
-//		let ksfMatrixSize = globalMatrixSize - kffMatrixSize
-//		var rowKsf: [Int32] = []
-//		var columnKsf: [Int32] = []
-//		var valuesKsf: [Double] = []
-//		for entry in stiffnessesForKsf {
-//			rowKsf.append(entry.key.x)
-//			columnKsf.append(entry.key.y)
-//			valuesKsf.append(entry.value)
-//		}
-//		let attributesKsf = SparseAttributes_t()
-//		let blockCountKsf = valuesKsf.count
-//		let blockSizeKsf = 1
-//		let Ksf = SparseConvertFromCoordinate(ksfMatrixSize, ksfMatrixSize,
-//											blockCountKsf, UInt8(blockSizeKsf),
-//											attributesKsf,
-//											&rowKsf, &columnKsf,
-//											&valuesKsf)
-//		SparseCleanup(Ksf)
-//
-//		// Perform matrix operations using Kff and Ksf
-//		guard forcesVectorF.count == kffMatrixSize else {
-//			print("forcesVectorF != kffMatrixSize"); throw AnalysisError.matrixSizeMisMatch
-//		}
-//		guard reactionOffsetVector.count == ksfMatrixSize else {
-//			print("forcesVectorF != kffMatrixSize"); throw AnalysisError.matrixSizeMisMatch
-//		}
-//		var forcesVectorFValues: [Double] = Array(forcesVectorF.values)
-//		let reactionOffsetVectorValues: [Double] = Array(reactionOffsetVector.values)
-//		var displacements: [Double] = Array(repeating: 0, count: Int(kffMatrixSize))
-//		var reactions: [Double] = Array(repeating: 0, count: reactionOffsetVectorValues.count)
-//		forcesVectorFValues.withUnsafeMutableBufferPointer { bPtr in
-//			// Forces
-//			let b = DenseVector_Double(count: kffMatrixSize,
-//											data: bPtr.baseAddress!)
-//			displacements.withUnsafeMutableBufferPointer { xPtr in
-//				// Displacements
-//				let x = DenseVector_Double(count: kffMatrixSize, data: xPtr.baseAddress!)
-//				SparseSolve(factoredKff, b, x) // Solve for displacements
-//
-//				reactions.withUnsafeMutableBufferPointer { xPtr in
-//					let y: DenseVector_Double = DenseVector_Double(count: ksfMatrixSize, data: xPtr.baseAddress!)
-//					SparseMultiply(Ksf,x,y) // Multiply for reactions
-//				}
-//			}
-//		}
-//		// Adjust reactions
-//		for i in reactions.indices {
-//			reactions[i] = reactions[i] + reactionOffsetVectorValues[i]
-//		}
-//		SparseCleanup(Kff)
-//		SparseCleanup(Ksf)
-//
-//		var nodeDisplacements: [SIMD2<Double>:SIMD3<Double>] = [:]
-//		for i in displacements.indices {
-//			if let item = kffNodeDisplacementDictionary[Int32(i)] {
-//				let d = SIMD3(displacements[i], displacements[i+1], displacements[i+2])
-//				nodeDisplacements.updateValue(d, forKey: item)
-//			}
-//		}
-//		var nodeReactions: [SIMD2<Double>:SIMD3<Double>] = [:]
-//		for i in reactions.indices {
-//			if let item = ksfNodeReactionDictionary[Int32(i)] {
-//				let r = SIMD3(reactions[i], reactions[i+1], reactions[i+2])
-//				nodeReactions.updateValue(r, forKey: item)
-//			}
-//		}
-//		results = Results(displacements: nodeDisplacements, reactions: nodeReactions)
-//	}
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//THE SOFTWARE.
+

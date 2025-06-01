@@ -13,6 +13,7 @@ public protocol MathEquation: CustomStringConvertible, Sendable {
 	func integrate(plus c: Double) -> MathEquation
 	mutating func scale(by rhs: Double)
 	func scaled(by rhs: Double) -> Self
+	func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double) -> (min: Double, max: Double)
 }
 extension MathEquation {
 	func definiteIntegral(over domain: ClosedRange<Double>, absoluteTolerance: Double = 1.0e-8, relativeTolerance: Double = 1.0e-2) throws -> Double {
@@ -229,6 +230,12 @@ public struct Math {
 			return Self.init(segments: newSegments)
 		}
 		
+		public var minX: Double {
+			return segments.min(by: {$0.xStart < $1.xStart})!.xStart
+		}
+		public var maxX: Double {
+			return segments.max(by: {$0.xEnd < $1.xEnd})!.xEnd
+		}
 		public var description: String {
 			var str = "{\n"
 			for s in segments {
@@ -245,10 +252,11 @@ public struct Math {
 			return str+"}"
 		}
 		
-		public func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double = 10) -> (min: Double, max: Double) {
+		public func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double = 120) -> (min: Double, max: Double) {
 			guard segments.count > 0 else { return (0, 0) }
-			let minX = segments.min(by: {$0.xStart < $1.xStart})!.xStart
-			let maxX = segments.max(by: {$0.xEnd < $1.xEnd})!.xEnd
+			if segments.count == 1 {
+				return segments.first!.eq.minmaxValues(in: range, num_dx: num_dx)
+			}
 			let xStart = max(range?.lowerBound ?? minX, minX)
 			let xEnd = min(range?.upperBound ?? maxX, maxX)
 			var minValue = callAsFunction(xStart)
@@ -269,19 +277,20 @@ public struct Math {
 		}
 	}
 	
-	public struct PolynomialEQ: MathEquation {
-		
+	public struct PolynomialEQ: MathEquation, AdditiveArithmetic {
 		public private(set) var terms: [Term]
 		
 		/// A straight horizontal line
 		public init(y: Double) {
-			self.terms = [Term(y, xToThe: 0)]
+			self.terms = [Term(y, exp: 0)]
 		}
 		public init(terms: [Term]) {
 			self.terms = terms
+			organizeTerms()
 		}
 		public init(terms: Term...) {
 			self.terms = terms
+			organizeTerms()
 		}
 //		public init(_ str1: String) {
 //			var str2 = str1.trimmingCharacters(in: CharacterSet(arrayLiteral: " "))
@@ -323,29 +332,57 @@ public struct Math {
 		public func callAsFunction(_ x: Double) -> Double {
 			var result = 0.0
 			for term in terms {
-				result += (term.coefficient*pow(x, term.degree))
+				result += term.coefficient*pow(x, Double(term.degree))
 			}
 			return result
 		}
-		
 		public func makeDerivative() -> MathEquation {
 			var newTerms = [Term]()
 			for term in terms {
 				if term.degree > 0 {
-					newTerms.append(Term(term.coefficient*term.degree, xToTheDouble: term.degree-1))
+					newTerms.append(Term(term.coefficient*Double(term.degree), exp: term.degree-1))
 				}
 			}
+			if newTerms.isEmpty { return PolynomialEQ.zero }
 			return PolynomialEQ(terms: newTerms)
 		}
 		public func integrate(plus c: Double) -> MathEquation {
 			var newTerms = [Term]()
 			for term in terms {
 				if term.degree >= 0 {
-					newTerms.append(Term(term.coefficient/(term.degree+1), xToTheDouble: term.degree+1))
+					newTerms.append(Term(term.coefficient/Double((term.degree+1)), exp: term.degree+1))
 				}
 			}
-			newTerms.append(Term(c, xToTheDouble: 0))
+			newTerms.append(Term(c, exp: 0))
 			return PolynomialEQ(terms: newTerms)
+		}
+		public mutating func organizeTerms() {
+			let highestDegree = terms.map {$0.degree}.max() ?? 0
+			let lowestDegree = terms.map {$0.degree}.min() ?? 0
+			var tempTerms = [Term]()
+			for i in lowestDegree...highestDegree {
+				let filteredTerms = terms.filter({$0.degree == i})
+				if filteredTerms.count == 0 { continue }
+				if filteredTerms.count == 1 {
+					tempTerms.append(filteredTerms.first!)
+				} else {
+					if let term = filteredTerms.merge(combining: { t1, t2 in
+						Term(t1.coefficient+t2.coefficient, exp: i)
+					}) {
+						tempTerms.append(term)
+					}
+				}
+			}
+			self.terms = tempTerms.sorted(by: {$0.degree > $1.degree})
+		}
+		func makeMonic() -> PolynomialEQ {
+			// Divides the polynomial with the leading coefficient to make the polynomial monic
+			guard terms.count > 0 else { return self }
+			var monicTerms = terms
+			for i in terms.indices {
+				monicTerms[i] = terms[i]/(terms[0].coefficient)
+			}
+			return PolynomialEQ(terms: monicTerms)
 		}
 		
 		public mutating func scale(by rhs: Double) {
@@ -360,6 +397,40 @@ public struct Math {
 			}
 			return Self.init(terms: terms)
 		}
+		public func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double = 120) -> (min: Double, max: Double) {
+			var minValue, maxValue: Double
+			if let range {
+				minValue = callAsFunction(range.lowerBound)
+				maxValue = callAsFunction(range.lowerBound)
+			} else {
+				if isEvenFunction {
+					if terms.max(by: {$0.degree < $1.degree})!.coefficient < 0 {
+						minValue = -Double.infinity
+						maxValue = callAsFunction(0)
+					} else {
+						minValue = callAsFunction(0)
+						maxValue = Double.infinity
+					}
+				} else {
+					return (-Double.infinity, Double.infinity)
+				}
+			}
+			let derivative = makeDerivative() as! PolynomialEQ
+			let localMinMaxs = try! derivative.zeros(in: range)
+			for x in localMinMaxs {
+				minValue = min(minValue, callAsFunction(x))
+				maxValue = max(maxValue, callAsFunction(x))
+			}
+			return (minValue, maxValue)
+		}
+		public static var zero: Math.PolynomialEQ = Math.PolynomialEQ(y: 0)
+		public static func + (lhs: Math.PolynomialEQ, rhs: Math.PolynomialEQ) -> Math.PolynomialEQ {
+			Math.PolynomialEQ(terms: lhs.terms+rhs.terms)
+		}
+		public static func - (lhs: Math.PolynomialEQ, rhs: Math.PolynomialEQ) -> Math.PolynomialEQ {
+			let rhsTerms = rhs.terms.map({Term(-$0.coefficient, exp: $0.degree)})
+			return Math.PolynomialEQ(terms: lhs.terms+rhsTerms)
+		}
 		
 		public var description: String {
 			let termDescriptions = terms.map { term in
@@ -367,24 +438,26 @@ public struct Math {
 			}
 			return termDescriptions.joined(separator: " + ")
 		}
-		public struct Term: CustomStringConvertible, Sendable {
+		public struct Term: CustomStringConvertible, Sendable, Equatable {
 
-			private(set) var degree: Double
+			private(set) var degree: UInt
 			private(set) var coefficient: Double
 			
-			public init(_ coefficient: Double, xToThe degree: UInt = 0) {
-				self.degree = Double(degree)
+			public init(_ coefficient: Double, exp degree: UInt = 0) {
+				self.degree = degree
 				self.coefficient = coefficient
 			}
-			init(_ coefficient: Double, xToTheDouble degree: Double) {
-				self.degree = Double(degree)
-				self.coefficient = coefficient
+			public static func + (_ lhs: Self, _ rhs: Self) -> Self {
+				return Term(lhs.coefficient+rhs.coefficient, exp: lhs.degree)
 			}
 			public static func * (_ lhs: Self, _ rhs: Double) -> Self {
-				return Term(lhs.coefficient*rhs, xToTheDouble: lhs.degree)
+				return Term(lhs.coefficient*rhs, exp: lhs.degree)
+			}
+			public static func / (_ lhs: Self, _ rhs: Double) -> Self {
+				return Term(lhs.coefficient/rhs, exp: lhs.degree)
 			}
 			public static func * (_ lhs: Double, _ rhs: Self) -> Self {
-				return Term(lhs*rhs.coefficient, xToTheDouble: rhs.degree)
+				return Term(lhs*rhs.coefficient, exp: rhs.degree)
 			}
 			
 			public var description: String {
@@ -397,6 +470,97 @@ public struct Math {
 				}
 			}
 		}
+		
+		public var isEvenFunction: Bool {
+			guard !terms.isEmpty else { return true }
+			let d = terms.map({$0.degree}).max()!
+			return d % 2 == 0
+		}
+		public func zeros(in range: ClosedRange<Double>?) throws -> [Double] {
+			guard !terms.isEmpty else { throw PolynomialEQError.emptyPolynomial }
+			let degree = terms.map({$0.degree}).max() ?? 0
+
+			// Handle low degree polynomials
+			if degree == 0  {
+				if callAsFunction(0) == 0 {
+					if range?.contains(0) ?? true { return [0] } else { return [] }
+				} else { return [] }
+			}
+			if degree == 1 {
+				let a = terms.first(where: { $0.degree == 1 })?.coefficient ?? 0
+				let b = terms.first(where: { $0.degree == 0 })?.coefficient ?? 0
+				if a == 0 && b == 0 {
+					if range?.contains(0) ?? true { return [0] } else { return [] }
+				} else if a == 0 { return [] }
+				if range?.contains(-b/a) ?? true { return [-b/a] } else { return [] }
+			}
+			var zeros = [Double]()
+			if degree == 2 {
+				let a = terms.first(where: { $0.degree == 2 })?.coefficient ?? 0
+				let b = terms.first(where: { $0.degree == 1 })?.coefficient ?? 0
+				let c = terms.first(where: { $0.degree == 0 })?.coefficient ?? 0
+				let discriminant = b*b-4*a*c
+				guard a != 0, discriminant >= 0 else { return [] }
+				if discriminant == 0 {
+					zeros = [(-b)/(2 * a)]
+				} else {
+					let sqrtDisc = sqrt(discriminant)
+					zeros = [(-b + sqrtDisc) / (2 * a), (-b - sqrtDisc) / (2 * a)]
+				}
+			}
+			// Handle higher order polynomials
+			let companion = try companionMatrix()
+			let eigenvalues = try companion.eigenvalues()
+			
+			// Filter real roots
+			zeros = eigenvalues.compactMap({
+				if $0.i.isApproxEqual(to: 0) {
+					return $0.x
+				} else {
+					return nil
+				}
+			})
+			// Verify zeros
+			for zero in zeros {
+				if !callAsFunction(zero).isApproxEqual(to: 0) { throw PolynomialEQError.invalidZeros }
+			}
+			// Filter zeros based on range
+			if let range {
+				zeros = zeros.filter({range.contains($0)})
+			}
+			return zeros
+		}
+		private func polynomialCoefficients() -> [Double] {
+			let maxDegree = terms.map(\.degree).max() ?? 0
+			var coeffs = Array(repeating: 0.0, count: Int(maxDegree) + 1)
+			for term in terms {
+				coeffs[Int(term.degree)] += term.coefficient
+			}
+			return coeffs.reversed() // Highest degree first
+		}
+		private func companionMatrix() throws -> Matrix<Double> {
+			let coeffs = polynomialCoefficients()
+			let n = coeffs.count - 1
+			guard n > 0 else { throw PolynomialEQError.emptyPolynomial }
+			guard coeffs[0] != 0 else { throw PolynomialEQError.notMonic }
+			
+			// Normalize to reversed monic polynomial
+			let a = coeffs.map({ $0 / coeffs[0] }).reversedRawCollection()
+			
+			// Build companion matrix
+			var companion = Matrix<Double>(size: n)
+			for i in 1..<n {
+				companion[i,i-1] = 1.0
+			}
+			for i in 0..<n {
+				companion[i,n-1] = -a[i]
+			}
+			return companion
+		}
+	}
+	
+	public enum PolynomialEQError: Error {
+		case notMonic, emptyPolynomial, invalidZeros
 	}
 	
 	/// A defined value at an unspecified location.
@@ -414,13 +578,18 @@ public struct Math {
 			return NullEQ()
 		}
 		public func integrate(plus c: Double) -> MathEquation {
-			return PolynomialEQ(terms: PolynomialEQ.Term(term, xToThe: 0))
+			return PolynomialEQ(terms: PolynomialEQ.Term(term, exp: 0))
 		}
 		public mutating func scale(by rhs: Double) {
 			term *= rhs
 		}
 		public func scaled(by rhs: Double) -> Self {
 			return Impulse(term: term*rhs)
+		}
+		public func minmaxValues(in range: ClosedRange<Double>? = nil, num_dx: Double = 120) -> (min: Double, max: Double) {
+			let minValue = min(0,term)
+			let maxValue = max(0,term)
+			return (minValue, maxValue)
 		}
 		public var description: String {
 			return "\(term) (impulse)"
@@ -437,7 +606,7 @@ public struct Math {
 			return NullEQ()
 		}
 		public func integrate(plus c: Double) -> MathEquation {
-			return PolynomialEQ(terms: PolynomialEQ.Term(c, xToThe: 0))
+			return PolynomialEQ(terms: PolynomialEQ.Term(c, exp: 0))
 		}
 		public mutating func scale(by rhs: Double) {}
 		public func scaled(by rhs: Double) -> Self {
@@ -445,6 +614,9 @@ public struct Math {
 		}
 		public var description: String {
 			return "0 (null)"
+		}
+		public func minmaxValues(in range: ClosedRange<Double>? = nil, num_dx: Double = 120) -> (min: Double, max: Double) {
+			return (0, 0)
 		}
 	}
 	
