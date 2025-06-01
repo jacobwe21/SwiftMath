@@ -108,7 +108,6 @@ public struct Math {
 			}
 			return nil
 		}
-		
 		func intergrateImpulseSegment(s: Segment) -> Segment {
 			guard s.eq is Math.Impulse else { fatalError("Segment \(s.eq) is not an Impulse") }
 			if s.eq(0).isInfinite {
@@ -146,7 +145,35 @@ public struct Math {
 			}
 			return MultiEQ(segments: newSegments)
 		}
-		
+		public func integrateSmoothly(plus c: Double) -> any MathEquation {
+			if let result = quickIntegration(plus: c) { return result }
+			var newSegments: [Segment] = []
+			let sortedSegments = segments.sorted(by: {
+				if $0.xStart == $1.xStart {
+					return $0.xStartIsInclusive
+				} else {
+					return $0.xStart<$1.xStart
+				}
+			})
+			// Intergrate segments
+			for s in sortedSegments {
+				if s.eq is Math.Impulse {
+					newSegments.append(intergrateImpulseSegment(s: s))
+				} else {
+					var segment = s
+					segment.eq = s.eq.integrate(plus: 0)
+					let cForSegment = segment.eq(s.xStart) - MultiEQ(segments: newSegments)(s.xStart)
+					segment.eq = s.eq.integrate(plus: cForSegment)
+					newSegments.append(segment)
+				}
+			}
+			// Adjust by c
+			if c != 0 {
+				let segment = Segment(eq: Math.PolynomialEQ(y: c), xStart: -Double.infinity, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
+				newSegments.append(segment)
+			}
+			return MultiEQ(segments: newSegments)
+		}
 		public func integrateAtSegmentStart(plus c: Double, connectToGlobal: Bool) -> any MathEquation {
 			if let result = quickIntegration(plus: c) { return result }
 			var newSegments: [Segment] = []
@@ -165,7 +192,7 @@ public struct Math {
 					var segment = s
 					segment.eq = s.eq.integrate(plus: 0)
 					if connectToGlobal {
-						let cForSegment = segment.eq(s.xStart) - MultiEQ(segments: newSegments)(s.xStart)
+						let cForSegment = MultiEQ(segments: newSegments)(s.xStart) - segment.eq(s.xStart)
 						segment.eq = s.eq.integrate(plus: cForSegment)
 					} else {
 						segment.eq = s.eq.integrate(plus: -segment.eq(s.xStart))
