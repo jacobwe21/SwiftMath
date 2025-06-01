@@ -162,42 +162,10 @@ public struct Math {
 				} else {
 					var segment = s
 					segment.eq = s.eq.integrate(plus: 0)
-					let cForSegment = segment.eq(s.xStart) - MultiEQ(segments: newSegments)(s.xStart)
-					segment.eq = s.eq.integrate(plus: cForSegment)
+					segment.eq = s.eq.integrate(plus: -segment.eq(s.xStart))
 					newSegments.append(segment)
-				}
-			}
-			// Adjust by c
-			if c != 0 {
-				let segment = Segment(eq: Math.PolynomialEQ(y: c), xStart: -Double.infinity, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
-				newSegments.append(segment)
-			}
-			return MultiEQ(segments: newSegments)
-		}
-		public func integrateAtSegmentStart(plus c: Double, connectToGlobal: Bool) -> any MathEquation {
-			if let result = quickIntegration(plus: c) { return result }
-			var newSegments: [Segment] = []
-			let sortedSegments = segments.sorted(by: {
-				if $0.xStart == $1.xStart {
-					return $0.xStartIsInclusive
-				} else {
-					return $0.xStart<$1.xStart
-				}
-			})
-			// Intergrate segments
-			for s in sortedSegments {
-				if s.eq is Math.Impulse {
-					newSegments.append(intergrateImpulseSegment(s: s))
-				} else {
-					var segment = s
-					segment.eq = s.eq.integrate(plus: 0)
-					if connectToGlobal {
-						let cForSegment = MultiEQ(segments: newSegments)(s.xStart) - segment.eq(s.xStart)
-						segment.eq = s.eq.integrate(plus: cForSegment)
-					} else {
-						segment.eq = s.eq.integrate(plus: -segment.eq(s.xStart))
-					}
-					newSegments.append(segment)
+					let continuityImpulse = Math.Impulse(term: segment.eq(s.xEnd))
+					newSegments.append(Segment(eq: continuityImpulse, xStart: s.xEnd, xEnd: Double.infinity, xStartIsInclusive: !segment.xEndIsInclusive, xEndIsInclusive: false))
 				}
 			}
 			// Adjust by c
