@@ -165,7 +165,7 @@ public struct Math {
 					var segment = s
 					segment.eq = s.eq.integrate(plus: 0)
 					if connectToGlobal {
-						let cForSegment = MultiEQ(segments: newSegments)(s.xStart) - (segment.eq(s.xStart)-segment.eq(0))
+						let cForSegment = segment.eq(s.xStart) - MultiEQ(segments: newSegments)(s.xStart)
 						segment.eq = s.eq.integrate(plus: cForSegment)
 					} else {
 						segment.eq = s.eq.integrate(plus: -segment.eq(s.xStart))
