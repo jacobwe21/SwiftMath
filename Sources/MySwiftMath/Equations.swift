@@ -165,7 +165,7 @@ public struct Math {
 					segment.eq = s.eq.integrate(plus: 0)
 					segment.eq = s.eq.integrate(plus: -segment.eq(s.xStart))
 					newSegments.append(segment)
-					let continuitySegment = Segment(eq: Math.PolynomialEQ(y: segment.eq(s.xEnd)), xStart: s.xStart, xEnd: Double.infinity, xStartIsInclusive: !segment.xEndIsInclusive, xEndIsInclusive: false)
+					let continuitySegment = Segment(eq: Math.PolynomialEQ(y: segment.eq(s.xEnd)), xStart: s.xEnd, xEnd: Double.infinity, xStartIsInclusive: !segment.xEndIsInclusive, xEndIsInclusive: false)
 					newSegments.append(continuitySegment)
 				}
 			}
