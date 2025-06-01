@@ -13,6 +13,7 @@ public protocol MathEquation: CustomStringConvertible, Sendable {
 	func integrate(plus c: Double) -> MathEquation
 	mutating func scale(by rhs: Double)
 	func scaled(by rhs: Double) -> Self
+	func criticalPoints(in range: ClosedRange<Double>?) -> [Double]
 	func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double) -> (min: Double, max: Double)
 }
 extension MathEquation {
@@ -164,8 +165,8 @@ public struct Math {
 					segment.eq = s.eq.integrate(plus: 0)
 					segment.eq = s.eq.integrate(plus: -segment.eq(s.xStart))
 					newSegments.append(segment)
-					let continuityImpulse = Math.Impulse(term: segment.eq(s.xEnd))
-					newSegments.append(Segment(eq: continuityImpulse, xStart: s.xEnd, xEnd: Double.infinity, xStartIsInclusive: !segment.xEndIsInclusive, xEndIsInclusive: false))
+					let continuitySegment = Segment(eq: Math.PolynomialEQ(y: segment.eq(s.xEnd)), xStart: s.xStart, xEnd: Double.infinity, xStartIsInclusive: !segment.xEndIsInclusive, xEndIsInclusive: false)
+					newSegments.append(continuitySegment)
 				}
 			}
 			// Adjust by c
@@ -247,6 +248,26 @@ public struct Math {
 			return str+"}"
 		}
 		
+		public func criticalPoints(in range: ClosedRange<Double>?) -> [Double] {
+			var points = Set<Double>()
+			for s in segments {
+				if s.xStart.isFinite {
+					points.insert(s.xStart)
+					points.insert(s.xStart+Double.leastNonzeroMagnitude)
+					points.insert(s.xStart-Double.leastNonzeroMagnitude)
+				}
+				if s.xEnd.isFinite {
+					points.insert(s.xEnd)
+					points.insert(s.xEnd+Double.leastNonzeroMagnitude)
+					points.insert(s.xEnd-Double.leastNonzeroMagnitude)
+				}
+				points.formUnion(s.eq.criticalPoints(in: range))
+			}
+			if let range {
+				points = points.filter { return range.contains($0) }
+			}
+			return points.map(\.self)
+		}
 		public func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double = 120) -> (min: Double, max: Double) {
 			guard segments.count > 0 else { return (0, 0) }
 			if segments.count == 1 {
@@ -256,12 +277,16 @@ public struct Math {
 			let xEnd = min(range?.upperBound ?? maxX, maxX)
 			var minValue = callAsFunction(xStart)
 			var maxValue = minValue
-			for i in 1..<Int(num_dx) {
+			for i in 0...Int(num_dx) {
 				let z = Double(i)/num_dx // Percent
 				if z > 1 || z < 0 { fatalError("z out of range") }
 				let x = xStart + (xEnd - xStart)*z
 				minValue = min(minValue, callAsFunction(x))
 				maxValue = max(maxValue, callAsFunction(x))
+			}
+			for point in criticalPoints(in: range) {
+				minValue = min(minValue, callAsFunction(point))
+				maxValue = max(maxValue, callAsFunction(point))
 			}
 			return (minValue, maxValue)
 		}
@@ -410,13 +435,15 @@ public struct Math {
 					return (-Double.infinity, Double.infinity)
 				}
 			}
-			let derivative = makeDerivative() as! PolynomialEQ
-			let localMinMaxs = try! derivative.zeros(in: range)
-			for x in localMinMaxs {
+			for x in criticalPoints(in: range) {
 				minValue = min(minValue, callAsFunction(x))
 				maxValue = max(maxValue, callAsFunction(x))
 			}
 			return (minValue, maxValue)
+		}
+		public func criticalPoints(in range: ClosedRange<Double>?) -> [Double] {
+			let dydx = makeDerivative() as! PolynomialEQ
+			return (try? dydx.zeros(in: range)) ?? []
 		}
 		public static var zero: Math.PolynomialEQ = Math.PolynomialEQ(y: 0)
 		public static func + (lhs: Math.PolynomialEQ, rhs: Math.PolynomialEQ) -> Math.PolynomialEQ {
@@ -581,10 +608,13 @@ public struct Math {
 		public func scaled(by rhs: Double) -> Self {
 			return Impulse(term: term*rhs)
 		}
-		public func minmaxValues(in range: ClosedRange<Double>? = nil, num_dx: Double = 120) -> (min: Double, max: Double) {
+		public func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double = 120) -> (min: Double, max: Double) {
 			let minValue = min(0,term)
 			let maxValue = max(0,term)
 			return (minValue, maxValue)
+		}
+		public func criticalPoints(in: ClosedRange<Double>?) -> [Double] {
+			return []
 		}
 		public var description: String {
 			return "\(term) (impulse)"
@@ -593,6 +623,7 @@ public struct Math {
 	
 	/// Equivalent to zero
 	public struct NullEQ: MathEquation {
+		
 		public init() {}
 		public func callAsFunction(_ x: Double) -> Double {
 			return 0
@@ -610,8 +641,11 @@ public struct Math {
 		public var description: String {
 			return "0 (null)"
 		}
-		public func minmaxValues(in range: ClosedRange<Double>? = nil, num_dx: Double = 120) -> (min: Double, max: Double) {
+		public func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double = 120) -> (min: Double, max: Double) {
 			return (0, 0)
+		}
+		public func criticalPoints(in: ClosedRange<Double>?) -> [Double] {
+			return []
 		}
 	}
 	
