@@ -374,132 +374,410 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 		return Matrix(filteredValues)
 	}
 	
-	/// Determinant of the matrix (only defined for square matrices).
-	public func inverse() throws -> Matrix<T> {
-		guard isSquare else { throw MatrixError.notSquareMatrix }
-		
-		let det = Matrix.calculateDeterminant(for: values)
-		if det == 0 { throw MatrixError.singularMatrix }
-		
-		let size = rows
-		if size == 1 { return Matrix([[(1/values[0][0])]]) }
-		if size == 3 {
-			let m = values
-
-			let a = m[0][0], b = m[0][1], c = m[0][2]
-			let d = m[1][0], e = m[1][1], f = m[1][2]
-			let g = m[2][0], h = m[2][1], i = m[2][2]
-
-			let A = e * i - f * h
-			let B = -(d * i - f * g)
-			let C = d * h - e * g
-			let D = -(b * i - c * h)
-			let E = a * i - c * g
-			let F = -(a * h - b * g)
-			let G = b * f - c * e
-			let H = -(a * f - c * d)
-			let I = a * e - b * d
-			
-			let det = a * A + b * B + c * C
-			guard det != 0 else {
-				throw MatrixError.singularMatrix
-			}
-			let resultValues: [[T]] = [
-				[A, D, G],
-				[B, E, H],
-				[C, F, I]
-			]
-			return Matrix(resultValues)/det
-		}
-		if size < 5 {
-			return (1/det)*(try! self.adjoint())
-		}
-		
-		var augmented = values
-
-		// Append identity matrix to the right of the original
-		for i in 0..<size {
-			augmented[i] += (0..<size).map { $0 == i ? 1 : 0 }.map(T.init)
-		}
-
-		// Perform Gauss-Jordan elimination
-		for i in 0..<size {
-			// Find pivot
-			var pivotRow = i
-			for j in i+1..<size where abs(augmented[j][i]) > abs(augmented[pivotRow][i]) {
-				pivotRow = j
-			}
-
-			// If pivot is zero, matrix is singular
-			if augmented[pivotRow][i] == 0 {
-				throw MatrixError.singularMatrix
-			}
-
-			// Swap rows if needed
-			if i != pivotRow {
-				augmented.swapAt(i, pivotRow)
-			}
-
-			// Normalize pivot row
-			let pivot = augmented[i][i]
-			for j in 0..<2 * size {
-				augmented[i][j] /= pivot
-			}
-
-			// Eliminate other rows
-			for k in 0..<size where k != i {
-				let factor = augmented[k][i]
-				for j in 0..<2 * size {
-					augmented[k][j] -= factor * augmented[i][j]
-				}
-			}
-		}
-
-		// Extract right half as the inverse
-		let inverseValues = augmented.map { Array($0[size..<(2*size)]) }
-		return Matrix(inverseValues)
-	}
-	
 	/// Recursive helper function to calculate the determinant.
 	private static func calculateDeterminant(for matrix: [[T]]) -> T {
 		let n = matrix.count
 	
-		if n == 1 { // Base case for 1x1 matrix
+		if n == 1 { // 1x1 matrix
 			return matrix[0][0]
 		}
-		if n == 2 { // Base case for 2x2 matrix
+		if n == 2 { // 2x2 matrix
 			return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]
 		}
-		if n == 3 { // Base case for 3x3 matrix
+		if n == 3 { // 3x3 matrix
 			let a = matrix[0][0] * (matrix[1][1] * matrix[2][2] - matrix[1][2] * matrix[2][1])
 			let b = matrix[0][1] * (matrix[1][0] * matrix[2][2] - matrix[1][2] * matrix[2][0])
 			let c = matrix[0][2] * (matrix[1][0] * matrix[2][1] - matrix[1][1] * matrix[2][0])
 			return a - b + c
 		}
+		if n < 6 {
+			// Calculate determinant using cofactor expansion - O(n!)
+			var det: T = 0
+			for i in 0..<n {
+				// Create the submatrix by excluding the first row and the ith column
+				var subMatrix = [[T]]()
+				for j in 1..<matrix.count {
+					var row = [T]()
+					for k in 0..<matrix.count {
+						if k != i {
+							row.append(matrix[j][k])
+						}
+					}
+					subMatrix.append(row)
+				}
+				// Recursive determinant calculation with cofactor expansion
+				let sign: T = (i % 2 == 0) ? 1 : -1
+				det += sign * matrix[0][i] * calculateDeterminant(for: subMatrix)
+			}
+			return det
+		} else {
+			// Calculate determinant using LU decomposition - O(n^3)
+			do {
+				let (L, U, _, rowSwaps) = try Matrix.luDecomposition(of: matrix)
+				return calculateDeterminant(fromL: L, withU: U, rowSwaps: rowSwaps)
+			} catch {
+				if let matrixError = error as? MatrixError {
+					if matrixError == MatrixError.singularMatrix { return 0 }
+				}
+				fatalError(error.localizedDescription)
+			}
+		}
+	}
+	/// Calculate the determinant from LU Decomposition
+	private static func calculateDeterminant(fromL L: [[T]], withU U: [[T]], rowSwaps: Int) -> T {
+		//let detL: T = 1
+		var detU: T = 1
+		// Product of diagonal elements
+		for i in 0..<L.count {
+			//detL *= L[i][i] // Diagonal elements are all 1.
+			detU *= U[i][i]
+		}
+		//let det = detL*detU
+		// Adjust sign for number of row swaps
+		return (rowSwaps % 2 == 0) ? detU : -detU
+	}
 	
-		var det: T = 0
-		// Calculate determinant using cofactor expansion - O(n!)
+	public static func solve(A: Matrix<T>, b: Matrix<T>) throws -> Matrix<T> {
+		guard A.isSquare else { throw MatrixError.notSquareMatrix }
+		guard b.columns == 1 && b.rows == A.rows else { throw MatrixError.nonMatchingDimensions }
+		let n = A.rows
+		if n < 6 {
+			let inverseA = try A.inverse()
+			return try inverseA * b
+		}
+		
+		let (L, U, P, _) = try Matrix.luDecomposition(of: A.values)
+		
+		let x = try Matrix.solve(L: L, U: U, P: P, b: b.flatValues)
+		return Matrix(x, isRow: false)
+	}
+	public static func solve(L: [[T]], U: [[T]], P: [Int], b: [T]) throws -> [T] {
+		guard L.count == L.first?.count && U.count == U.first?.count else {
+			throw MatrixError.notSquareMatrix
+		}
+		guard b.count == L.count && L.count == U.count && P.count == L.count else {
+			throw MatrixError.nonMatchingDimensions
+		}
+		let n = L.count
+		
+		// Helper to apply permutation to identity column
+		func permute(_ e: [T]) -> [T] {
+			var result = Array<T>(repeating: 0.0, count: n)
+			for i in 0..<n {
+				result[i] = e[P[i]]
+			}
+			return result
+		}
+		
+		let Pb = permute(b)
+		
+		// Forward substitution: solve L * y = Pb
+		var y = Array<T>(repeating: 0.0, count: n)
+		for j in 0..<n {
+			y[j] = Pb[j]
+			for k in 0..<j {
+				y[j] -= L[j][k] * y[k]
+			}
+			// L diagonal is 1, so divide unnecessary
+		}
+		
+		// Backward substitution: solve U * x = y
+		var x = Array<T>(repeating: 0.0, count: n)
+		for j in stride(from: n - 1, through: 0, by: -1) {
+			x[j] = y[j]
+			for k in (j + 1)..<n {
+				x[j] -= U[j][k] * x[k]
+			}
+			guard U[j][j] != 0 else { throw MatrixError.singularMatrix } // Singular matrix
+			x[j] /= U[j][j]
+		}
+		return x
+	}
+	
+	/// Determinant of the matrix (only defined for square matrices).
+	public func inverse() throws -> Matrix<T> {
+		guard isSquare else { throw MatrixError.notSquareMatrix }
+		let n = rows
+		if n < 6 {
+			let det = Matrix.calculateDeterminant(for: values)
+			if det == 0 { throw MatrixError.singularMatrix }
+			
+			if n == 1 { return Matrix([[(1/values[0][0])]]) }
+			if n == 3 {
+				let m = values
+
+				let a = m[0][0], b = m[0][1], c = m[0][2]
+				let d = m[1][0], e = m[1][1], f = m[1][2]
+				let g = m[2][0], h = m[2][1], i = m[2][2]
+
+				let A = e * i - f * h
+				let B = -(d * i - f * g)
+				let C = d * h - e * g
+				let D = -(b * i - c * h)
+				let E = a * i - c * g
+				let F = -(a * h - b * g)
+				let G = b * f - c * e
+				let H = -(a * f - c * d)
+				let I = a * e - b * d
+				
+				//let det = a * A + b * B + c * C
+				let resultValues: [[T]] = [
+					[A, D, G],
+					[B, E, H],
+					[C, F, I]
+				]
+				return Matrix(resultValues)/det
+			}
+			// Use Cofactor Expansion for small matrices (n! < n^3).
+			return (1/det)*(try! self.adjoint())
+		}
+		
+		// TODO: Implement Cholesky decomposition for symmetric positive definite matrices
+		// Use LU Decomposition
+		let (L, U, P, _) = try Matrix.luDecomposition(of: self.values)
+		var invCols: [[T]] = []
+		
+		// Helper to apply permutation to identity column
+		func permute(_ e: [T]) -> [T] {
+			var result = Array<T>(repeating: 0.0, count: n)
+			for i in 0..<n {
+				result[i] = e[P[i]]
+			}
+			return result
+		}
+		
+		// Solve for each column of the inverse
 		for i in 0..<n {
-			// Create the submatrix by excluding the first row and the ith column
-			var subMatrix = [[T]]()
-			for j in 1..<matrix.count {
-				var row = [T]()
-				for k in 0..<matrix.count {
-					if k != i {
-						row.append(matrix[j][k])
+			// Unit vector (column of identity)
+			var e = Array<T>(repeating: 0.0, count: n)
+			e[i] = 1.0
+			let b = permute(e)
+			
+			// Forward substitution: solve L * y = b
+			var y = Array<T>(repeating: 0.0, count: n)
+			for j in 0..<n {
+				y[j] = b[j]
+				for k in 0..<j {
+					y[j] -= L[j][k] * y[k]
+				}
+				// L diagonal is 1, so divide unnecessary
+			}
+			
+			// Backward substitution: solve U * x = y
+			var x = Array<T>(repeating: 0.0, count: n)
+			for j in stride(from: n - 1, through: 0, by: -1) {
+				x[j] = y[j]
+				for k in (j + 1)..<n {
+					x[j] -= U[j][k] * x[k]
+				}
+				guard U[j][j] != 0 else { throw MatrixError.singularMatrix } // Singular matrix
+				x[j] /= U[j][j]
+			}
+			
+			invCols.append(x)
+		}
+		
+		// Transpose columns to rows
+		let inverseValues = (0..<n).map { i in
+			invCols.map { $0[i] }
+		}
+		return Matrix(inverseValues)
+
+		// Perform Gauss-Jordan elimination
+//		var augmented = values
+//
+//		// Append identity matrix to the right of the original
+//		for i in 0..<size {
+//			augmented[i] += (0..<size).map { $0 == i ? 1 : 0 }.map(T.init)
+//		}
+//
+//		for i in 0..<size {
+//			// Find pivot
+//			var pivotRow = i
+//			for j in i+1..<size where abs(augmented[j][i]) > abs(augmented[pivotRow][i]) {
+//				pivotRow = j
+//			}
+//
+//			// If pivot is zero, matrix is singular
+//			if augmented[pivotRow][i] == 0 {
+//				throw MatrixError.singularMatrix
+//			}
+//
+//			// Swap rows if needed
+//			if i != pivotRow {
+//				augmented.swapAt(i, pivotRow)
+//			}
+//
+//			// Normalize pivot row
+//			let pivot = augmented[i][i]
+//			for j in 0..<2 * size {
+//				augmented[i][j] /= pivot
+//			}
+//
+//			// Eliminate other rows
+//			for k in 0..<size where k != i {
+//				let factor = augmented[k][i]
+//				for j in 0..<2 * size {
+//					augmented[k][j] -= factor * augmented[i][j]
+//				}
+//			}
+//		}
+//
+//		// Extract right half as the inverse
+//		let inverseValues = augmented.map { Array($0[size..<(2*size)]) }
+//		return Matrix(inverseValues)
+	}
+	
+	/// Returns (L, U, P, swapCount) for LU decomposition with partial pivoting.
+	/// - Returns: Optional tuple (L, U, P, swapCount), or nil if decomposition fails.
+	public static func luDecomposition(of matrix: [[T]], tolerance: T = 0.000001) throws -> (L: [[T]], U: [[T]], P: [Int], swapCount: Int) {
+		guard matrix.count == matrix.first?.count else { throw MatrixError.notSquareMatrix }
+		let n = matrix.count
+		var A = matrix
+		var L = Array(repeating: Array<T>(repeating: 0.0, count: n), count: n)
+		var U = Array(repeating: Array<T>(repeating: 0.0, count: n), count: n)
+		var P: Array<Int> = Array(0..<n)
+		var swapCount = 0
+		
+		let swapsAreRequired: Bool = {
+			for i in 0..<n {
+				if abs(A[i][i]) < tolerance { return true }
+			}
+			return false
+		}()
+		
+		if swapsAreRequired {
+			for i in 0..<n {
+				// Partial Pivoting
+				var maxRow = i
+				var maxVal: T = 0.0
+				for k in i..<n {
+					let kABS = abs(A[k][i])
+					if kABS > maxVal {
+						maxVal = kABS
+						maxRow = k
 					}
 				}
-				subMatrix.append(row)
+				
+				// Zero pivot => singular (or near singular) matrix
+				if maxVal < tolerance {
+					throw MatrixError.singularMatrix
+				}
+				
+				// Swap rows in A and P
+				if maxRow != i {
+					A.swapAt(i, maxRow) // Pivot A
+					P.swapAt(i, maxRow) // Pivot P
+					swapCount += 1
+				}
 			}
-			// Recursive determinant calculation with cofactor expansion
-			let sign: T = (i % 2 == 0) ? 1 : -1
-			det += sign * matrix[0][i] * calculateDeterminant(for: subMatrix)
 		}
-		// TO-DO
-		// Calculate determinant using row reduction (Gaussian elimination) - O(n^3)
-		//return rowEcholonForm?.mainDiagonal?.reduce(1, *) ?? 0
-		// Calculate determinant using LU decomposition?
-		return det
+
+		// Doolittle algorithm + Partial Pivoting
+		for i in 0..<n {
+			
+			// Upper Triangular
+			for j in i..<n {
+				// Summation of L(i, k) * U(k, j)
+				var sum: T = 0.0
+				for k in 0..<i {
+					sum += L[i][k] * U[k][j]
+				}
+				// Evaluating U(i, j)
+				U[i][j] = A[i][j] - sum
+			}
+
+			
+			// Lower Triangular
+			L[i][i] = 1.0 // unit diagonal
+			for j in (i+1)..<n {
+				// Summation of L(j, k) * U(k, i)
+				var sum: T = 0.0
+				for k in 0..<i {
+					sum += L[j][k] * U[k][i]
+				}
+				// Evaluating L(j, i)
+				if U[i][i] == 0.0 { throw MatrixError.singularMatrix } // Singular matrix
+				L[j][i] = (A[j][i] - sum) / U[i][i]
+			}
+		}
+		return (L, U, P, swapCount)
+	}
+	/// Builds a permutation matrix from a row permutation array.
+	/// Each index `i` in `permutation` maps original row `i` to `permutation[i]`.
+	public static func permutationMatrix(from permutation: [Int]) -> Matrix<T> {
+		let n = permutation.count
+		var values = Array(repeating: Array<T>(repeating: 0.0, count: n), count: n)
+		for i in 0..<n {
+			values[permutation[i]][i] = 1.0
+		}
+		return Matrix(values)
+	}
+
+	
+	// UNTESTED - written by AI - LU decomposition is about 2x faster than QR usually.
+//	func qrDecompose(_ A: [[T]]) -> (Q: [[T]], R: [[T]]) {
+//		let n = A.count
+//		let m = A[0].count
+//		var Q: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: n)
+//		var R: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: m)
+//
+//		var A = A // Copy
+//		for k in 0..<m {
+//			var norm: T = 0.0
+//			for i in 0..<n {
+//				norm += A[i][k] * A[i][k]
+//			}
+//			norm = sqrt(norm)
+//			for i in 0..<n {
+//				Q[i][k] = A[i][k] / norm
+//			}
+//			R[k][k] = norm
+//
+//			for j in (k+1)..<m {
+//				var dot: T = 0.0
+//				for i in 0..<n {
+//					dot += Q[i][k] * A[i][j]
+//				}
+//				R[k][j] = dot
+//				for i in 0..<n {
+//					A[i][j] -= Q[i][k] * dot
+//				}
+//			}
+//		}
+//		return (Q, R)
+//	}
+	
+	// Error types for matrix operations
+	public enum MatrixError: String, Error {
+		case nonMatchingDimensions = "Dimensions of matrices do not match."
+		case singularMatrix = "Matrix is singular."
+		case emptyMatrix = "Matrix is empty."
+		case notSquareMatrix = "Matrix is not square, and must be square for this operation."
+		case indexOutOfRange = "Index is out-of-range."
+		case computationFailure = "Computational Failure"
+		case matrixNotDecomposable = "Matrix not Decomposable"
+	}
+	
+	/// Display row count x column count
+	public var sizeDescription: String {
+		"\(rows)x\(columns)"
+	}
+	
+	/// Convert matrix to a string representation
+	public var description: String {
+		var result = "\(rows)x\(columns)\n"
+		for i in 0..<rows {
+			result += "["
+			for j in 0..<columns {
+				result += "\(values[i][j])"
+				if j < columns - 1 {
+					result += ", "
+				}
+			}
+			result += "]\n"
+		}
+		return result
 	}
 	
 	/// Check if indices are valid
@@ -521,6 +799,30 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 			values[i][j] = newValue
 		}
 	}
+	
+	// MARK: Surge
+	// Surge MIT License:
+
+	//Copyright © 2014-2019 the Surge contributors
+	//
+	//Permission is hereby granted, free of charge, to any person obtaining a copy
+	//of this software and associated documentation files (the "Software"), to deal
+	//in the Software without restriction, including without limitation the rights
+	//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	//copies of the Software, and to permit persons to whom the Software is
+	//furnished to do so, subject to the following conditions:
+	//
+	//The above copyright notice and this permission notice shall be included in
+	//all copies or substantial portions of the Software.
+	//
+	//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	//THE SOFTWARE.
+	
 	// ALTERNATE Subscripts for flatValues formulation.
 //	public subscript(row: Int, column: Int) -> T {
 //		get {
@@ -592,85 +894,6 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 			}
 		}
 		return try eigenDecompose(computeEigenVectors: false).eigenValues
-	}
-	
-	// UNTESTED - written by AI
-	func qrDecompose(_ A: [[T]]) -> (Q: [[T]], R: [[T]]) {
-		let n = A.count
-		let m = A[0].count
-		var Q: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: n)
-		var R: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: m)
-
-		var A = A // Copy
-		for k in 0..<m {
-			var norm: T = 0.0
-			for i in 0..<n {
-				norm += A[i][k] * A[i][k]
-			}
-			norm = sqrt(norm)
-			for i in 0..<n {
-				Q[i][k] = A[i][k] / norm
-			}
-			R[k][k] = norm
-
-			for j in (k+1)..<m {
-				var dot: T = 0.0
-				for i in 0..<n {
-					dot += Q[i][k] * A[i][j]
-				}
-				R[k][j] = dot
-				for i in 0..<n {
-					A[i][j] -= Q[i][k] * dot
-				}
-			}
-		}
-		return (Q, R)
-	}
-	
-//	/// Fetches or updates a value in the matrix. Returns `nil` if out-of-range, and does nothing when setting a value if out-of-range or if new value is `nil`.
-//	public subscript(i: Int, j: Int) -> T? {
-//		get {
-//			guard isValidIndex(row: i, col: j) else { return nil }
-//			return values[i][j]
-//		}
-//		set(newValue) {
-//			guard isValidIndex(row: i, col: j) && newValue != nil else { return }
-//			if let newValue {
-//				values[i][j] = newValue
-//			}
-//		}
-//	}
-	
-	// Error types for matrix operations
-	public enum MatrixError: String, Error {
-		case nonMatchingDimensions = "Dimensions of matrices do not match."
-		case singularMatrix = "Matrix is singular."
-		case emptyMatrix = "Matrix is empty."
-		case notSquareMatrix = "Matrix is not square, and must be square for this operation."
-		case indexOutOfRange = "Index is out-of-range."
-		case computationFailure = "Computational Failure"
-		case matrixNotDecomposable = "Matrix not Decomposable"
-	}
-	
-	/// Display row count x column count
-	public var sizeDescription: String {
-		"\(rows)x\(columns)"
-	}
-	
-	/// Convert matrix to a string representation
-	public var description: String {
-		var result = "\(rows)x\(columns)\n"
-		for i in 0..<rows {
-			result += "["
-			for j in 0..<columns {
-				result += "\(values[i][j])"
-				if j < columns - 1 {
-					result += ", "
-				}
-			}
-			result += "]\n"
-		}
-		return result
 	}
 	
 	/// Decomposes a square matrix into its eigenvalues and left and right eigenvectors.
@@ -801,18 +1024,18 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 
 	}
 }
-extension Matrix: Collection {
-	public subscript(_ row: Int) -> ArraySlice<T> {
-		let startIndex = row * columns
-		let endIndex = startIndex + columns
-		return self.flatValues[startIndex..<endIndex]
-	}
-	public var startIndex: Int { return 0 }
-	public var endIndex: Int { return self.rows }
-	public func index(after i: Int) -> Int {
-		return i + 1
-	}
-}
+//extension Matrix: Collection {
+//	public subscript(_ row: Int) -> ArraySlice<T> {
+//		let startIndex = row * columns
+//		let endIndex = startIndex + columns
+//		return self.flatValues[startIndex..<endIndex]
+//	}
+//	public var startIndex: Int { return 0 }
+//	public var endIndex: Int { return self.rows }
+//	public func index(after i: Int) -> Int {
+//		return i + 1
+//	}
+//}
 
 // MARK: Large Sparse Matrices
 public extension SparseMatrix_Double {
@@ -932,25 +1155,5 @@ public extension SparseMatrix_Double {
 //	}
 //}
 
-// Surge MIT License:
 
-//Copyright © 2014-2019 the Surge contributors
-//
-//Permission is hereby granted, free of charge, to any person obtaining a copy
-//of this software and associated documentation files (the "Software"), to deal
-//in the Software without restriction, including without limitation the rights
-//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//copies of the Software, and to permit persons to whom the Software is
-//furnished to do so, subject to the following conditions:
-//
-//The above copyright notice and this permission notice shall be included in
-//all copies or substantial portions of the Software.
-//
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//THE SOFTWARE.
 
