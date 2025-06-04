@@ -421,7 +421,7 @@ public struct Math {
 			var minValue, maxValue: Double
 			if let range {
 				minValue = callAsFunction(range.lowerBound)
-				maxValue = callAsFunction(range.lowerBound)
+				maxValue = callAsFunction(range.upperBound)
 			} else {
 				if isEvenFunction {
 					if terms.max(by: {$0.degree < $1.degree})!.coefficient < 0 {
