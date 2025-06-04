@@ -420,8 +420,8 @@ public struct Math {
 		public func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double = 120) -> (min: Double, max: Double) {
 			var minValue, maxValue: Double
 			if let range {
-				minValue = callAsFunction(range.lowerBound)
-				maxValue = callAsFunction(range.upperBound)
+				minValue = min(callAsFunction(range.lowerBound),callAsFunction(range.upperBound))
+				maxValue = max(callAsFunction(range.lowerBound),callAsFunction(range.upperBound))
 			} else {
 				if isEvenFunction {
 					if terms.max(by: {$0.degree < $1.degree})!.coefficient < 0 {

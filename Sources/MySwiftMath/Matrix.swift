@@ -713,40 +713,39 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 		}
 		return Matrix(values)
 	}
-
 	
-	// UNTESTED - written by AI - LU decomposition is about 2x faster than QR usually.
-//	func qrDecompose(_ A: [[T]]) -> (Q: [[T]], R: [[T]]) {
-//		let n = A.count
-//		let m = A[0].count
-//		var Q: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: n)
-//		var R: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: m)
-//
-//		var A = A // Copy
-//		for k in 0..<m {
-//			var norm: T = 0.0
-//			for i in 0..<n {
-//				norm += A[i][k] * A[i][k]
-//			}
-//			norm = sqrt(norm)
-//			for i in 0..<n {
-//				Q[i][k] = A[i][k] / norm
-//			}
-//			R[k][k] = norm
-//
-//			for j in (k+1)..<m {
-//				var dot: T = 0.0
-//				for i in 0..<n {
-//					dot += Q[i][k] * A[i][j]
-//				}
-//				R[k][j] = dot
-//				for i in 0..<n {
-//					A[i][j] -= Q[i][k] * dot
-//				}
-//			}
-//		}
-//		return (Q, R)
-//	}
+	// UNTESTED - written by AI - LU decomposition is about 2x faster than QR usually for solving matrices, but QR is best for eigenvalues and eigenvectors.
+	private func qrDecompose(iterations: Int = 10) -> (Q: [[T]], R: [[T]]) {
+		var A = self.values
+		let n = A.count
+		let m = A[0].count
+		var Q: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: n)
+		var R: [[T]] = Array(repeating: Array(repeating: 0.0, count: m), count: m)
+
+		for k in 0..<m {
+			var norm: T = 0.0
+			for i in 0..<n {
+				norm += A[i][k] * A[i][k]
+			}
+			norm = sqrt(norm)
+			for i in 0..<n {
+				Q[i][k] = A[i][k] / norm
+			}
+			R[k][k] = norm
+
+			for j in (k+1)..<m {
+				var dot: T = 0.0
+				for i in 0..<n {
+					dot += Q[i][k] * A[i][j]
+				}
+				R[k][j] = dot
+				for i in 0..<n {
+					A[i][j] -= Q[i][k] * dot
+				}
+			}
+		}
+		return (Q, R)
+	}
 	
 	// Error types for matrix operations
 	public enum MatrixError: String, Error {
@@ -870,7 +869,6 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 //		}
 //	}
 	
-	//public func eigenvalues(maxIterations: Int = 100, tolerance: Double = 1e-10) throws -> [(x: T, i: T)] {
 	public func eigenvalues(maxIterations: Int = 100, tolerance: Double = 1e-10) throws -> [(x: T, i: T)] {
 		guard isSquare else { throw MatrixError.notSquareMatrix }
 		if rows == 1 {
@@ -903,7 +901,28 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 	///   to represent a complex number.
 	func eigenDecompose(computeEigenVectors: Bool) throws -> MatrixEigenDecompositionResult<T> {
 		let input = Matrix<Double>(self)
-		let decomposition = try eigenDecompose(input, computeEigenVectors: computeEigenVectors)
+		let decomposition = try eigenDecomposeOLD(input, computeEigenVectors: computeEigenVectors)
+		
+//		guard rows == columns else {
+//			throw MatrixError.notSquareMatrix
+//		}
+//		let (Q,R) = self.qrDecompose()
+//		let lambdas: [(x: T, i: T)] = []
+//		var rightEigenVectors: [[(T, T)]] = [[]]
+//		if computeEigenVectors  {
+//			for lambda in lambdas {
+//				var A = try self-Matrix<T>.identity(size: rows)*lambda.x
+//				let realVector = try Matrix.solve(A: A, b: Matrix(Array<T>(repeating: 0, count: rows), isRow: false))
+//				A = try self-Matrix<T>.identity(size: rows)*lambda.i
+//				let imaginaryVector = try Matrix.solve(A: A, b: Matrix(Array<T>(repeating: 0, count: rows), isRow: false))
+//				var eigenVector: [(T, T)] = []
+//				for i in 0..<rows {
+//					eigenVector.append((realVector.flatValues[i],imaginaryVector.flatValues[i]))
+//				}
+//				rightEigenVectors.append(eigenVector)
+//			}
+//		}
+		
 		return MatrixEigenDecompositionResult<T>(
 			eigenValues: decomposition.eigenValues.map { (T($0.0), T($0.1)) },
 			leftEigenVectors: decomposition.leftEigenVectors.map { $0.map { (T($0.0), T($0.1)) } },
@@ -918,7 +937,7 @@ public struct Matrix<T: BinaryFloatingPoint>: Equatable, CustomStringConvertible
 	///   - lhs: a square matrix
 	/// - Returns: a struct with the eigen values and left and right eigen vectors using (Double, Double)
 	///   to represent a complex number.
-	func eigenDecompose(_ lhs: Matrix<Double>, computeEigenVectors: Bool) throws -> MatrixEigenDecompositionResult<Double> {
+	func eigenDecomposeOLD(_ lhs: Matrix<Double>, computeEigenVectors: Bool) throws -> MatrixEigenDecompositionResult<Double> {
 		
 		guard lhs.rows == lhs.columns else {
 			throw MatrixError.notSquareMatrix
