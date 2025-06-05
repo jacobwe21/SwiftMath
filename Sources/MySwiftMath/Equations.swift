@@ -165,8 +165,10 @@ public struct Math {
 					segment.eq = s.eq.integrate(plus: 0)
 					segment.eq = s.eq.integrate(plus: -segment.eq(s.xStart))
 					newSegments.append(segment)
-					let continuitySegment = Segment(eq: Math.PolynomialEQ(y: segment.eq(s.xEnd)), xStart: s.xEnd, xEnd: Double.infinity, xStartIsInclusive: !segment.xEndIsInclusive, xEndIsInclusive: false)
-					newSegments.append(continuitySegment)
+					if s.xEnd.isFinite || s.xEnd.isInfinite && s.xEnd < 0 {
+						let continuitySegment = Segment(eq: Math.PolynomialEQ(y: segment.eq(s.xEnd)), xStart: s.xEnd, xEnd: Double.infinity, xStartIsInclusive: !segment.xEndIsInclusive, xEndIsInclusive: false)
+						newSegments.append(continuitySegment)
+					}
 				}
 			}
 			// Adjust by c
@@ -236,13 +238,13 @@ public struct Math {
 			var str = "{\n"
 			for s in segments {
 				if s.xStartIsInclusive && s.xEndIsInclusive {
-					str += s.eq.description + " ∈ [\(s.xStart),\(s.xEnd)] \n"
+					str += s.eq.description + " [\(s.xStart),\(s.xEnd)] \n"
 				} else if !s.xStartIsInclusive && s.xEndIsInclusive {
-					str += s.eq.description + " ∈ (\(s.xStart),\(s.xEnd)] \n"
+					str += s.eq.description + " (\(s.xStart),\(s.xEnd)] \n"
 				} else if s.xStartIsInclusive && !s.xEndIsInclusive {
-					str += s.eq.description + " ∈ [\(s.xStart),\(s.xEnd)) \n"
+					str += s.eq.description + " [\(s.xStart),\(s.xEnd)) \n"
 				} else {
-					str += s.eq.description + " ∈ (\(s.xStart),\(s.xEnd)) \n"
+					str += s.eq.description + " (\(s.xStart),\(s.xEnd)) \n"
 				}
 			}
 			return str+"}"
