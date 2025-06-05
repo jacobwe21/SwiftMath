@@ -20,6 +20,10 @@ public protocol EngineeringUnit: Dimension {
 }
 public extension EngineeringUnit {
 	var positiveOnly: Bool { false }
+	var scaleFactor: Double {
+		let measurement = Measurement(value: 1.0, unit: self)
+		return measurement.value / measurement.baseUnitValue()
+	}
 	static var allEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
 	static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({$0.isImperial}).map({$0.symbol}) }
 	static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({!$0.isImperial}).map({$0.symbol}) }

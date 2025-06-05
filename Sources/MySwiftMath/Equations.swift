@@ -118,7 +118,7 @@ public struct Math {
 			}
 		}
 		
-		public func integrateAtZero(plus c: Double) -> any MathEquation {
+		public func integrateAtZero(plus c: Double, xStart: Double = -Double.infinity) -> any MathEquation {
 			if let result = quickIntegration(plus: c) { return result }
 			var newSegments: [Segment] = []
 			let sortedSegments = segments.sorted(by: {
@@ -141,12 +141,12 @@ public struct Math {
 			}
 			// Adjust by c
 			if c != 0 {
-				let segment = Segment(eq: Math.PolynomialEQ(y: c), xStart: -Double.infinity, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
+				let segment = Segment(eq: Math.PolynomialEQ(y: c), xStart: xStart, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
 				newSegments.append(segment)
 			}
 			return MultiEQ(segments: newSegments)
 		}
-		public func integrateSmoothly(plus c: Double) -> any MathEquation {
+		public func integrateSmoothly(plus c: Double, xStart: Double = -Double.infinity) -> any MathEquation {
 			if let result = quickIntegration(plus: c) { return result }
 			var newSegments: [Segment] = []
 			let sortedSegments = segments.sorted(by: {
@@ -173,7 +173,7 @@ public struct Math {
 			}
 			// Adjust by c
 			if c != 0 {
-				let segment = Segment(eq: Math.PolynomialEQ(y: c), xStart: -Double.infinity, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
+				let segment = Segment(eq: Math.PolynomialEQ(y: c), xStart: xStart, xEnd: Double.infinity, xStartIsInclusive: false, xEndIsInclusive: false)
 				newSegments.append(segment)
 			}
 			return MultiEQ(segments: newSegments)
