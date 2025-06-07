@@ -1246,6 +1246,7 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 		}
 		.onChange(of: preferredUnitsData) {
 			allowedUnitSystems = specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
+			measurementUnit = unit.symbol
 		}
 	}
 }
