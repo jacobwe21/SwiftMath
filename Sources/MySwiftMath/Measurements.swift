@@ -844,7 +844,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
 				}
-			ENGRUnitPicker(description: "Unit for \(description)", unit: measurement.unit, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+			ENGRUnitPicker<EngrUnitType>(description: "Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
 				.onChange(of: measurementUnit) {
 					onChangeOfUnit()
 				}
@@ -881,7 +881,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
 				}
-			ENGRUnitPicker(description: "", unit: measurement.unit, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+			ENGRUnitPicker<EngrUnitType>(description: "", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
 				.onChange(of: measurementUnit) {
 					onChangeOfUnit()
 				}
@@ -931,7 +931,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			Text(description)
 			Spacer()
 			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.formatted(sigFigs: ...4))
-			ENGRUnitPicker(description: os == .macOS ? "":"Unit for \(description)", unit: measurement.unit, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+			ENGRUnitPicker<EngrUnitType>(description: os == .macOS ? "":"Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
 				.onChange(of: measurementUnit) {
 					let unit = EngrUnitType.unit(for: measurementUnit)
 					measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
@@ -1239,7 +1239,7 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 		HStack {
 //			Text(description)
 //			Spacer()
-			ENGRUnitPicker(description: description, unit: unit, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+			ENGRUnitPicker<EngrUnitType>(description: description, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
 				.onChange(of: measurementUnit) {
 					unit = EngrUnitType.unit(for: measurementUnit)
 				}
@@ -1252,7 +1252,6 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 
 private struct ENGRUnitPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
 	let description: String
-	let unit: EngrUnitType
 	@Binding var unitString: String
 	let allowedUnitSystems: [UnitSystem]
 	
@@ -1279,6 +1278,9 @@ private struct ENGRUnitPicker<EngrUnitType: EngineeringUnit>: View where EngrUni
 			}
 		}
 		.pickerStyle(.menu)
+	}
+	var unit: EngrUnitType {
+		EngrUnitType.unit(for: unitString)
 	}
 }
 
