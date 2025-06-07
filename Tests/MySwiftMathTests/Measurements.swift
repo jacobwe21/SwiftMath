@@ -68,4 +68,26 @@ final class MeasurementTests: XCTestCase {
 		a1.convert(to: .poundFeet)
 		XCTAssertEqual(a1.value, 0.7375610332, accuracy: 0.001)
 	}
+	
+	func testUnitForceConversions() {
+		var a1 = Measurement<UnitForce>(value: 1, unit: .kip)
+		a1.convert(to: .pound)
+		XCTAssertEqual(a1.value, 1000, accuracy: 0.00000001)
+		a1.convert(to: .newton)
+		XCTAssertEqual(a1.value, 4448.22162825, accuracy: 0.0001)
+		a1.convert(to: .kilonewton)
+		XCTAssertEqual(a1.value, 4.44822162825, accuracy: 0.0001)
+		
+		var x1 = Measurement<UnitLength>(value: 1, unit: .feet)
+		x1.convert(to: .meters)
+		var work = a1*x1
+		work.convert(to: .kilonewtonMeters)
+		work.convert(to: .kipInches)
+		XCTAssertEqual(work.value, 12, accuracy: 0.00000001)
+		var distributedForce = Measurement<UnitLinearForce>(value: 1, unit: .kipsPerFoot)
+		distributedForce.convert(to: .kilonewtonsPerMillimeter)
+		var a2 = distributedForce*x1
+		a2.convert(to: .kip)
+		XCTAssertEqual(a2.value, 1, accuracy: 0.00000001)
+	}
 }

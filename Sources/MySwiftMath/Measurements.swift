@@ -28,6 +28,11 @@ public extension EngineeringUnit {
 	static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({$0.isImperial}).map({$0.symbol}) }
 	static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.filter({!$0.isImperial}).map({$0.symbol}) }
 	//static var defaultSIUnit: EngDimension { baseUnit() }
+	
+	static func unit(for symbol: String) -> EngrDimension {
+		let unitIndex = allEngineeringUnitSymbols.firstIndex(of: symbol) ?? 0
+		return allEngineeringUnits[unitIndex]
+	}
 }
 
 ///  The inverse (1/x) of `UnitTemperature`
@@ -83,11 +88,9 @@ public final class UnitInverseTemperature: Dimension, EngineeringUnit, @unchecke
 }
 ///  A unit of measure for density (technically the same as `UnitConcentrationMass`, but kg/m³ is the base unit for density).
 public final class UnitDensity: Dimension, EngineeringUnit, @unchecked Sendable {
-
 	public static let allEngineeringUnits: [UnitDensity] = [.kilogramPerCubicMeter, .poundsPerCubicFoot]
 	
 	public static let kilogramPerCubicMeter = UnitDensity(symbol: "kg/m³", converter: UnitConverterLinear(coefficient: 1.0))
-	
 	public static let poundsPerCubicFoot = UnitDensity(symbol: "lb/ft³", converter: UnitConverterLinear(coefficient: 16.018463))
 	
 	public override class func baseUnit() -> Self {
@@ -106,8 +109,8 @@ public final class UnitDensity: Dimension, EngineeringUnit, @unchecked Sendable 
 public final class UnitForce: Dimension, EngineeringUnit, @unchecked Sendable {
 	public static let newton = UnitForce(symbol: "N", converter: UnitConverterLinear(coefficient: 1.0))
 	public static let kilonewton = UnitForce(symbol: "kN", converter: UnitConverterLinear(coefficient: 1000))
-	public static let pound = UnitForce(symbol: "lb", converter: UnitConverterLinear(coefficient: 4.44822162825))
-	public static let kip = UnitForce(symbol: "k", converter: UnitConverterLinear(coefficient: 4448.22162825))
+	public static let pound = UnitForce(symbol: "lb", converter: UnitConverterLinear(coefficient: 4.4482216152605))
+	public static let kip = UnitForce(symbol: "k", converter: UnitConverterLinear(coefficient: 4448.2216152605))
 	
 	public override class func baseUnit() -> Self {
 		return UnitForce.newton as! Self
@@ -128,10 +131,10 @@ public final class UnitLinearForce: Dimension, EngineeringUnit, @unchecked Senda
 	public static let newtonsPerMillimeter = UnitLinearForce(symbol: "N/mm", converter: UnitConverterLinear(coefficient: 1000.0))
 	public static let kilonewtonsPerMillimeter = UnitLinearForce(symbol: "kN/mm", converter: UnitConverterLinear(coefficient: 1_000_000.0))
 	
-	public static let poundsPerFoot = UnitLinearForce(symbol: "lb/ft", converter: UnitConverterLinear(coefficient: 14.5939029))
-	public static let kipsPerFoot = UnitLinearForce(symbol: "k/ft", converter: UnitConverterLinear(coefficient: 14593.9029))
-	public static let poundsPerInch = UnitLinearForce(symbol: "lb/in", converter: UnitConverterLinear(coefficient: 175.126835))
-	public static let kipsPerInch = UnitLinearForce(symbol: "k/in", converter: UnitConverterLinear(coefficient: 175126.835))
+	public static let poundsPerFoot = UnitLinearForce(symbol: "lb/ft", converter: UnitConverterLinear(coefficient: 14.5939029372))
+	public static let kipsPerFoot = UnitLinearForce(symbol: "k/ft", converter: UnitConverterLinear(coefficient: 14593.9029372))
+	public static let poundsPerInch = UnitLinearForce(symbol: "lb/in", converter: UnitConverterLinear(coefficient: 175.1268352465))
+	public static let kipsPerInch = UnitLinearForce(symbol: "k/in", converter: UnitConverterLinear(coefficient: 175126.8352465))
 	
 	public override class func baseUnit() -> Self {
 		return UnitLinearForce.newtonsPerMeter as! Self
@@ -144,6 +147,7 @@ public final class UnitLinearForce: Dimension, EngineeringUnit, @unchecked Senda
 		} else { return false }
 	}
 }
+
 /// A unit of measure for work (force times distance) - Technically the same as the UnitEnergy class
 public final class UnitWork: Dimension, EngineeringUnit, @unchecked Sendable {
 	public static let newtonMeters = UnitWork(symbol: "N•m", converter: UnitConverterLinear(coefficient: 1.0))
@@ -152,9 +156,9 @@ public final class UnitWork: Dimension, EngineeringUnit, @unchecked Sendable {
 	public static let newtonCentimeters = UnitWork(symbol: "N•cm", converter: UnitConverterLinear(coefficient: 0.01))
 	public static let newtonMillimeters = UnitWork(symbol: "N•mm", converter: UnitConverterLinear(coefficient: 0.001))
 	
-	public static let poundFeet = UnitWork(symbol: "lb•ft", converter: UnitConverterLinear(coefficient: 1.35582))
+	public static let poundFeet = UnitWork(symbol: "lb•ft", converter: UnitConverterLinear(coefficient: 1.3558179483314))
 	public static let kipFeet = UnitWork(symbol: "k•ft", converter: UnitConverterLinear(coefficient: 1355.8179483314))
-	public static let kipInches = UnitWork(symbol: "k•in", converter: UnitConverterLinear(coefficient: 112.9848293))
+	public static let kipInches = UnitWork(symbol: "k•in", converter: UnitConverterLinear(coefficient: 112.98482933))
 	public static let poundInches = UnitWork(symbol: "lb•in", converter: UnitConverterLinear(coefficient: 0.11298482933))
 	
 	public override class func baseUnit() -> Self {
@@ -170,8 +174,6 @@ public final class UnitWork: Dimension, EngineeringUnit, @unchecked Sendable {
 }
 extension UnitLength: EngineeringUnit {
 	public static let allEngineeringUnits: [UnitLength] = [.meters,.centimeters,.millimeters,.feet,.inches]
-//	public static let allEngineeringUnits: [UnitLength] = [.kilometers,.meters,.centimeters,.millimeters,.miles,.yards,.feet,.inches]
-	
 	public var isImperial: Bool {
 		if self ==|| [.inches,.feet,.yards,.miles,.furlongs,.fathoms] {
 			return true
@@ -192,7 +194,6 @@ public extension Measurement where UnitType: UnitLength {
 
 extension UnitArea: EngineeringUnit {
 	public static let allEngineeringUnits: [UnitArea] = [.squareMeters,.squareCentimeters,.squareMillimeters,.squareFeet,.squareInches]
-//	public static let allEngineeringUnits: [UnitArea] = [.squareKilometers,.squareMeters,.squareCentimeters,.squareMillimeters,.squareMiles,.squareYards,.squareFeet,.squareInches]
 	
 	/// The unit that results by taking the square root of a UnitArea unit.
 	var linearBaseUnit: UnitLength? {
@@ -232,7 +233,23 @@ public extension Measurement where UnitType: UnitArea {
 
 extension UnitVolume: EngineeringUnit {
 	public static let allEngineeringUnits: [UnitVolume] = [.cubicMeters,.cubicCentimeters,.cubicMillimeters,.cubicFeet,.cubicInches]
-//	public static let allEngineeringUnits: [UnitVolume] = [.cubicMeters,.cubicCentimeters,.cubicMillimeters,.cubicYards,.cubicFeet,.cubicInches,.gallons,.liters]
+
+	
+	/// The unit that results by taking the cubic root of a UnitVolume unit.
+	var linearBaseUnit: UnitLength? {
+		switch self {
+		case .cubicKilometers: UnitLength.kilometers
+		case .cubicMeters: UnitLength.meters
+		case .cubicCentimeters: UnitLength.centimeters
+		case .cubicMillimeters: UnitLength.millimeters
+		case .cubicMiles: UnitLength.miles
+		case .cubicYards: UnitLength.yards
+		case .cubicFeet: UnitLength.feet
+		case .cubicInches: UnitLength.inches
+		default: nil
+		}
+	}
+	
 	public var isImperial: Bool {
 		if self ==|| [.acreFeet,.bushels,.cubicFeet,.cubicInches,.cubicMiles,.cubicYards,.cups,.imperialFluidOunces,.imperialPints,.imperialQuarts,.imperialGallons,.imperialTeaspoons,.imperialTablespoons] {
 			return true
@@ -240,32 +257,42 @@ extension UnitVolume: EngineeringUnit {
 	}
 }
 public final class UnitTesseract: Dimension, EngineeringUnit, @unchecked Sendable {
-	public static let tesseractMeters = UnitTesseract(symbol: "m⁴", converter: UnitConverterLinear(coefficient: 1))
-	public static let tesseractCentimeters = UnitTesseract(symbol: "cm⁴", converter: UnitConverterLinear(coefficient: 0.00000001))
-	public static let tesseractMillimeters = UnitTesseract(symbol: "mm⁴", converter: UnitConverterLinear(coefficient: 0.000000000001))
-	
-	public static let tesseractFeet = UnitTesseract(symbol: "ft⁴", converter: UnitConverterLinear(coefficient: 0.00863097485))
-	public static let tesseractInches = UnitTesseract(symbol: "in⁴", converter: UnitConverterLinear(coefficient: 0.000000416231426))
+	public static let quarticMeters = UnitTesseract(symbol: "m⁴", converter: UnitConverterLinear(coefficient: 1))
+	public static let quarticCentimeters = UnitTesseract(symbol: "cm⁴", converter: UnitConverterLinear(coefficient: 1e-8))
+	public static let quarticMillimeters = UnitTesseract(symbol: "mm⁴", converter: UnitConverterLinear(coefficient: 1e-12))
+	public static let quarticFeet = UnitTesseract(symbol: "ft⁴", converter: UnitConverterLinear(coefficient: pow(0.3048, 4)))
+	public static let quarticInches = UnitTesseract(symbol: "in⁴", converter: UnitConverterLinear(coefficient: pow(0.0254, 4)))
 	
 	public override class func baseUnit() -> Self {
-		return UnitTesseract.tesseractMeters as! Self
+		return UnitTesseract.quarticMeters as! Self
 	}
-	public static let allEngineeringUnits: [UnitTesseract] = [.tesseractMeters,.tesseractCentimeters,.tesseractMillimeters,.tesseractFeet,.tesseractInches]
+	public static let allEngineeringUnits: [UnitTesseract] = [.quarticMeters,.quarticCentimeters,.quarticMillimeters,.quarticFeet,.quarticInches]
 	override public static var supportsSecureCoding: Bool { true }
 	public var isImperial: Bool {
-		if self ==|| [.tesseractFeet,.tesseractInches] {
+		if self ==|| [.quarticFeet,.quarticInches] {
 			return true
 		} else { return false }
 	}
 	/// The unit that results by taking the square root of a UnitTesseract unit.
 	public var squareBaseUnit: UnitArea! {
 		switch self {
-		case .tesseractMeters: 		return UnitArea.squareMeters
-		case .tesseractCentimeters: return UnitArea.squareCentimeters
-		case .tesseractMillimeters: return UnitArea.squareMillimeters
-		case .tesseractFeet: 		return UnitArea.squareFeet
-		case .tesseractInches: 		return UnitArea.squareInches
+		case .quarticMeters: 		return UnitArea.squareMeters
+		case .quarticCentimeters: 	return UnitArea.squareCentimeters
+		case .quarticMillimeters: 	return UnitArea.squareMillimeters
+		case .quarticFeet: 			return UnitArea.squareFeet
+		case .quarticInches: 		return UnitArea.squareInches
 		default:					return nil
+		}
+	}
+	/// The unit that results by taking the quartic root of a UnitTesseract unit.
+	var linearBaseUnit: UnitLength? {
+		switch self {
+		case .quarticMeters: UnitLength.meters
+		case .quarticCentimeters: UnitLength.centimeters
+		case .quarticMillimeters: UnitLength.millimeters
+		case .quarticFeet: UnitLength.feet
+		case .quarticInches: UnitLength.inches
+		default: nil
 		}
 	}
 }
@@ -279,11 +306,10 @@ public extension Measurement where UnitType: UnitTesseract {
 	}
 }
 extension UnitAcceleration: EngineeringUnit {
-	public static let feetPerSecondSquared = UnitAcceleration(symbol: "ft/s²", converter: UnitConverterLinear(coefficient: 3.2808398950131))
-	public static let imperialGravity = UnitAcceleration(symbol: "g (ft/s²)", converter: UnitConverterLinear(coefficient: 32.18503937007874))
-	public static let allEngineeringUnits: [UnitAcceleration] = [.metersPerSecondSquared,.gravity,.feetPerSecondSquared,.imperialGravity]
+	public static let feetPerSecondSquared = UnitAcceleration(symbol: "ft/s²", converter: UnitConverterLinear(coefficient: 0.3048))
+	public static let allEngineeringUnits: [UnitAcceleration] = [.metersPerSecondSquared,.gravity,.feetPerSecondSquared]
 	public var isImperial: Bool {
-		if self ==|| [.feetPerSecondSquared,.imperialGravity] {
+		if self ==|| [.feetPerSecondSquared] {
 			return true
 		} else { return false }
 	}
@@ -293,16 +319,14 @@ extension UnitPressure: EngineeringUnit {
 	public static let poundsForcePerSquareFoot = UnitPressure(symbol: "psf", converter: UnitConverterLinear(coefficient: 47.88025898))
 	public static let allEngineeringUnits: [UnitPressure] = [.gigapascals,.megapascals,.kilopascals,.newtonsPerMetersSquared,.kipsPerSquareInch,.poundsForcePerSquareFoot,.poundsForcePerSquareInch]
 	public var isImperial: Bool {
-		if self ==|| [.inchesOfMercury,.poundsForcePerSquareInch,.kipsPerSquareInch,.poundsForcePerSquareFoot,.bars,.millibars] {
+		if self ==|| [.inchesOfMercury,.poundsForcePerSquareInch, .kipsPerSquareInch,.poundsForcePerSquareFoot,.bars,.millibars] {
 			return true
 		} else { return false }
 	}
 }
 extension UnitTemperature: EngineeringUnit {
 	public static let allEngineeringUnits: [UnitTemperature] = [.celsius,.fahrenheit,.kelvin]
-	
 	public var positiveOnly: Bool { self == .kelvin }
-	
 	public var isImperial: Bool {
 		if self == .fahrenheit {
 			return true
@@ -310,10 +334,19 @@ extension UnitTemperature: EngineeringUnit {
 	}
 }
 extension UnitAngle: EngineeringUnit {
-	public var isImperial: Bool { self == UnitAngle.degrees }
-	public static let allEngineeringUnits: [UnitAngle] = [.radians,.gradians,.degrees,.revolutions]
+	public static let percentSlope = UnitAngle(symbol: "%", converter: UnitConverterPercentSlope())
+	public var isImperial: Bool { false }
+	public static let allEngineeringUnits: [UnitAngle] = [.degrees,.radians,.gradians,.revolutions,.percentSlope]
 	public static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
 	public static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
+	class UnitConverterPercentSlope: UnitConverter, @unchecked Sendable {
+		override func baseUnitValue(fromValue value: Double) -> Double {
+			atan(value*0.01)
+		}
+		override func value(fromBaseUnitValue baseUnitValue: Double) -> Double {
+			tan(baseUnitValue)*100
+		}
+	}
 }
 
 public extension Measurement {
@@ -507,7 +540,6 @@ extension Measurement: @retroactive AdditiveArithmetic where UnitType: Dimension
 //	}
 //}
 
-
 import simd
 import SwiftUI
 public struct Measurement3D<UnitType>: Comparable, CustomDebugStringConvertible, CustomStringConvertible, Hashable, Codable where UnitType: Unit {
@@ -527,8 +559,6 @@ public struct Measurement3D<UnitType>: Comparable, CustomDebugStringConvertible,
 		_unit = CodableViaNSCoding(wrappedValue: unit)
 		self.values = values
 	}
-	
-	
 	
 	public var description: String {
 		"(x: \(xMeasurement), y: \(yMeasurement), z: \(zMeasurement))"
@@ -576,7 +606,6 @@ public extension Measurement3D where UnitType: Dimension {
 	func baseUnitValues() -> SIMD3<Double> {
 		return self.converted(to: .baseUnit()).values
 	}
-	
 	/// Converts the measurement to the specified unit.
 	mutating func convert(to newUnit: UnitType) {
 		values.x = xMeasurement.converted(to: newUnit).value
@@ -744,12 +773,27 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	@Environment(\.deviceOS) var os
 	let description: String
 	@Binding var measurement: Measurement<EngrUnitType>
-	@State private var measurementUnit: String
+	//@State private var measurementUnit: String
 	var measurementValue: Binding<Double> {
 		Binding {
-			measurement.converted(to: getUnit()).value
+			//measurement.converted(to: getUnit()).value
+			measurement.value
 		} set: { newValue in
-			measurement = Measurement(value: newValue, unit: getUnit())
+			measurement.value = newValue
+			//measurement = Measurement(value: newValue, unit: getUnit())
+		}
+	}
+	var measurementUnit: Binding<String> {
+		Binding {
+			measurement.unit.symbol
+		} set: { newValue in
+			let unit = EngrUnitType.unit(for: newValue)
+			if convertOnChangeOfUnits {
+				//measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
+				measurement.convert(to: unit)
+			} else {
+				measurement = Measurement(value: measurement.value, unit: unit)
+			}
 		}
 	}
 	//let minValue: Measurement<EngrUnitType>?
@@ -761,16 +805,18 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	let fixedUnitSystem: Bool
 	let defaultImperialUnitSymbol: String
 	let defaultSIUnitSymbol: String
+	let convertOnChangeOfUnits: Bool
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
 		_measurement = measurement
-		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
+		//_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		self.positiveOnly = positiveOnly
 		_allowedUnitSystems = State(initialValue: allowedUnits)
 		self.fixedUnitSystem = true
 		defaultImperialUnitSymbol = EngrUnitType.allImperialEngineeringUnitSymbols.first!
 		defaultSIUnitSymbol = EngrUnitType.allSIEngineeringUnitSymbols.first!
+		convertOnChangeOfUnits = convertOnChange
 	}
 //	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem]? = nil, minValue: Measurement<EngrUnitType>? = nil, maxValue: Measurement<EngrUnitType>? = nil, positiveOnly: Bool = false)  {
 //		self.description = description
@@ -781,39 +827,44 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 //		self.positiveOnly = positiveOnly
 //		self.allowedUnitSystems = allowedUnits ?? UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
 //	}
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
 		_measurement = measurement
-		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
+		//_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		self.positiveOnly = positiveOnly
 		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
 		self.fixedUnitSystem = false
 		self.defaultImperialUnitSymbol = defaultImperialUnit.symbol
 		self.defaultSIUnitSymbol = defaultSIUnit.symbol
+		convertOnChangeOfUnits = convertOnChange
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
 	
 	public var body: some View {
+#if os(macOS)
+		macOSbody
+#else
+		iOSbody
+#endif
+	}
+	
+	public var iOSbody: some View {
 		HStack {
 			Text("\(description)")
 			Spacer()
 			TextField(description, value: measurementValue, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
-#if !os(macOS)
 				.keyboardType(.numbersAndPunctuation)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
-#else
-				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
-#endif
 				.focused($thisMeasurementIsFocused)
 				.onChange(of: measurement) {
 					if measurement.value < 0 && positiveOnly {
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
-					measurementUnit = measurement.unit.symbol
+					//measurementUnit = measurement.unit.symbol
 				}
-			Picker(os == .macOS ? "":"Unit for \(description)", selection: $measurementUnit) {
+			Picker("Unit for \(description)", selection: measurementUnit) {
 				if allowedUnitSystems.contains(.imperial) {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
 						Text(unitSymbol).tag(unitSymbol)
@@ -825,23 +876,18 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 					}
 				}
 			}
-			.onChange(of: measurementUnit) {
-				let unit = getUnit()
-				measurement = Measurement(value: measurement.value, unit: unit) // Just change units
-				//measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit) // Conversion Option
-			}
-			.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
+//			.onChange(of: measurementUnit) {
+//				let unit = getUnit()
+//				if convertOnChangeOfUnits {
+//					//measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
+//					measurement = measurement.converted(to: unit)
+//				} else {
+//					measurement = Measurement(value: measurement.value, unit: unit)
+//				}
+//			}
 		}
 		.onChange(of: preferredUnitsData) { oldValue, newValue in
-			if !fixedUnitSystem {
-				self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
-				if allowedUnitSystems == [.imperial] {
-					measurementUnit = defaultImperialUnitSymbol
-				}
-				if allowedUnitSystems == [.SI] {
-					measurementUnit = defaultSIUnitSymbol
-				}
-			}
+			onChangeOfPreferredUnits()
 		}
 //		.onAppear {
 //			if !fixedUnitSystem {
@@ -876,9 +922,57 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 //		}
 	}
 	
-	func getUnit() -> EngrUnitType {
-		let unitIndex = EngrUnitType.allEngineeringUnitSymbols.firstIndex(of: measurementUnit)!
-		return EngrUnitType.allEngineeringUnits[unitIndex]
+	public var macOSbody: some View {
+		HStack {
+			Text("\(description)")
+			Spacer()
+			TextField(description, value: measurementValue, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+				.textFieldStyle(.roundedBorder)
+				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
+				.focused($thisMeasurementIsFocused)
+				.onChange(of: measurement) {
+					if measurement.value < 0 && positiveOnly {
+						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
+					}
+					//measurementUnit = measurement.unit.symbol
+				}
+			Picker("", selection: measurementUnit) {
+				if allowedUnitSystems.contains(.imperial) {
+					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
+				}
+				if allowedUnitSystems.contains(.SI) {
+					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
+				}
+			}.frame(minWidth: 70, idealWidth: 100, maxWidth: 120)
+//			.onChange(of: measurementUnit) {
+//				let unit = getUnit()
+//				if convertOnChangeOfUnits {
+//					//measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
+//					measurement = measurement.converted(to: unit)
+//				} else {
+//					measurement = Measurement(value: measurement.value, unit: unit)
+//				}
+//			}
+		}
+		.onChange(of: preferredUnitsData) { oldValue, newValue in
+			onChangeOfPreferredUnits()
+		}
+	}
+	
+	private func onChangeOfPreferredUnits() {
+		if !fixedUnitSystem {
+			self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
+//				if allowedUnitSystems == [.imperial] {
+//					measurementUnit = defaultImperialUnitSymbol
+//				}
+//				if allowedUnitSystems == [.SI] {
+//					measurementUnit = defaultSIUnitSymbol
+//				}
+		}
 	}
 }
 public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
@@ -918,7 +1012,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		HStack {
 			Text(description)
 			Spacer()
-			Text(measurement.converted(to: getUnit()).value.formatted(sigFigs: ...4))
+			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.formatted(sigFigs: ...4))
 			Picker(os == .macOS ? "":"Unit for \(description)", selection: $measurementUnit) {
 //				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
 //					Text(unitSymbol).tag(unitSymbol)
@@ -935,7 +1029,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 				}
 			}
 			.onChange(of: measurementUnit) {
-				let unit = getUnit()
+				let unit = EngrUnitType.unit(for: measurementUnit)
 				measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
 			}
 			.pickerStyle(.menu)
@@ -967,23 +1061,29 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 //			}
 //		}
 	}
-	
-	func getUnit() -> EngrUnitType {
-		let unitIndex = EngrUnitType.allEngineeringUnitSymbols.firstIndex(of: measurementUnit)!
-		return EngrUnitType.allEngineeringUnits[unitIndex]
-	}
 }
 public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
 	
 	let description: String
 	@Binding var unit: EngrUnitType
-	@State private var measurementUnit: String
+	//@State private var measurementUnit: String
+	var measurementUnit: Binding<String> {
+		Binding {
+			unit.symbol
+		} set: { newValue in
+			unit = EngrUnitType.unit(for: newValue)
+		}
+	}
 	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
-	@State private var allowedUnitSystems: [UnitSystem]
-	let fixedUnitSystem: Bool
+	let allowedFixedUnitSystems: [UnitSystem]?
+	var allowedUnitSystems: [UnitSystem] {
+		allowedFixedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
+	}
+	var fixedUnitSystem: Bool { allowedFixedUnitSystems != nil }
 	let defaultImperialUnitSymbol: String
 	let defaultSIUnitSymbol: String
 	
+	/// A picker with a fixed list of units.
 	public init(_ description: String, unit: Binding<EngrUnitType>, allowedUnits: [UnitSystem])  {
 #if os(macOS)
 		self.description = description+":"
@@ -991,12 +1091,12 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 		self.description = description
 #endif
 		_unit = unit
-		_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
-		_allowedUnitSystems = State(initialValue: allowedUnits)
-		self.fixedUnitSystem = true
+		//_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
+		allowedFixedUnitSystems = allowedUnits
 		defaultImperialUnitSymbol = EngrUnitType.allImperialEngineeringUnitSymbols.first!
 		defaultSIUnitSymbol = EngrUnitType.allSIEngineeringUnitSymbols.first!
 	}
+	/// A picker with variable list of units, based on the "preferredUnitSystem" `UserDefaults` key.
 	public init(_ description: String, unit: Binding<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType)  {
 #if os(macOS)
 		self.description = description+":"
@@ -1004,9 +1104,8 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 		self.description = description
 #endif
 		_unit = unit
-		_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
-		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
-		self.fixedUnitSystem = false
+		//_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
+		allowedFixedUnitSystems = nil
 		self.defaultImperialUnitSymbol = defaultImperialUnit.symbol
 		self.defaultSIUnitSymbol = defaultSIUnit.symbol
 	}
@@ -1017,56 +1116,35 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 		HStack {
 //			Text(description)
 //			Spacer()
-			Picker(description, selection: $measurementUnit) {
+			Picker(description, selection: measurementUnit) {
 //				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
 //					Text(unitSymbol).tag(unitSymbol)
 //				}
-				if allowedUnitSystems.contains(.imperial) {
-					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol)
-					}
-				}
 				if allowedUnitSystems.contains(.SI) {
 					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
 						Text(unitSymbol).tag(unitSymbol)
 					}
 				}
+				if allowedUnitSystems.contains(.imperial) {
+					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
+						Text(unitSymbol).tag(unitSymbol)
+					}
+				}
 			}
-			.onChange(of: measurementUnit) {
-				unit = getUnit()
-			}
+//			.onChange(of: measurementUnit) {
+//				unit = EngrUnitType.unit(for: measurementUnit)
+//			}
 			.pickerStyle(.menu)
 		}
-		.onChange(of: preferredUnitsData) { oldValue, newValue in
-			if !fixedUnitSystem {
-				self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
-				if allowedUnitSystems == [.imperial] {
-					measurementUnit = defaultImperialUnitSymbol
-				}
-				if allowedUnitSystems == [.SI] {
-					measurementUnit = defaultSIUnitSymbol
-				}
-			}
-		}
-//		.onAppear {
+//		.onChange(of: preferredUnitsData) { oldValue, newValue in
 //			if !fixedUnitSystem {
-//				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
-//				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
-//				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
-//					if allowedUnitSystems == [.imperial] {
-//						measurementUnit = defaultImperialUnitSymbol
-//					}
-//					if allowedUnitSystems == [.SI] {
-//						measurementUnit = defaultSIUnitSymbol
-//					}
+//				if allowedUnitSystems == [.imperial] {
+//					measurementUnit = defaultImperialUnitSymbol
+//				} else if allowedUnitSystems == [.SI] {
+//					measurementUnit = defaultSIUnitSymbol
 //				}
 //			}
 //		}
-	}
-	
-	func getUnit() -> EngrUnitType {
-		let unitIndex = EngrUnitType.allEngineeringUnitSymbols.firstIndex(of: measurementUnit)!
-		return EngrUnitType.allEngineeringUnits[unitIndex]
 	}
 }
 
