@@ -863,6 +863,8 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				.onChange(of: measurement) {
 					if measurement.value < 0 && positiveOnly {
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
+					} else {
+						measurement = Measurement(value: measurement.value, unit: measurement.unit)
 					}
 				}
 			Picker("Unit for \(description)", selection: measurementUnit) {
@@ -911,6 +913,8 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				.onChange(of: measurement) {
 					if measurement.value < 0 && positiveOnly {
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
+					} else {
+						measurement = Measurement(value: measurement.value, unit: measurement.unit)
 					}
 				}
 			Picker("", selection: measurementUnit) {
