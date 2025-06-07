@@ -775,12 +775,13 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	@Binding var measurement: Measurement<EngrUnitType>
 	//@State private var measurementUnit: String
 	var measurementValue: Binding<Double> {
-		Binding {
-			//measurement.converted(to: getUnit()).value
-			measurement.value
+		let unit = EngrUnitType.unit(for: measurement.unit.symbol)
+		return Binding {
+			measurement.converted(to: unit).value
+			//measurement.value
 		} set: { newValue in
-			measurement.value = newValue
-			//measurement = Measurement(value: newValue, unit: getUnit())
+			//measurement.value = newValue
+			measurement = Measurement(value: newValue, unit: unit)
 		}
 	}
 	var measurementUnit: Binding<String> {
@@ -789,8 +790,8 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		} set: { newValue in
 			let unit = EngrUnitType.unit(for: newValue)
 			if convertOnChangeOfUnits {
-				//measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
-				measurement.convert(to: unit)
+				measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
+				//measurement.convert(to: unit)
 			} else {
 				measurement = Measurement(value: measurement.value, unit: unit)
 			}
@@ -801,8 +802,11 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	@FocusState var thisMeasurementIsFocused: Bool
 	let positiveOnly: Bool
 	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
-	@State private var allowedUnitSystems: [UnitSystem]
-	let fixedUnitSystem: Bool
+	var fixedUnitSystem: Bool { specifiedUnitSystems != nil }
+	let specifiedUnitSystems: [UnitSystem]?
+	var allowedUnitSystems: [UnitSystem] {
+		specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
+	}
 	let defaultImperialUnitSymbol: String
 	let defaultSIUnitSymbol: String
 	let convertOnChangeOfUnits: Bool
@@ -812,8 +816,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		_measurement = measurement
 		//_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		self.positiveOnly = positiveOnly
-		_allowedUnitSystems = State(initialValue: allowedUnits)
-		self.fixedUnitSystem = true
+		specifiedUnitSystems = allowedUnits
 		defaultImperialUnitSymbol = EngrUnitType.allImperialEngineeringUnitSymbols.first!
 		defaultSIUnitSymbol = EngrUnitType.allSIEngineeringUnitSymbols.first!
 		convertOnChangeOfUnits = convertOnChange
@@ -832,8 +835,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		_measurement = measurement
 		//_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		self.positiveOnly = positiveOnly
-		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
-		self.fixedUnitSystem = false
+		specifiedUnitSystems = nil
 		self.defaultImperialUnitSymbol = defaultImperialUnit.symbol
 		self.defaultSIUnitSymbol = defaultSIUnit.symbol
 		convertOnChangeOfUnits = convertOnChange
@@ -849,7 +851,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 #endif
 	}
 	
-	public var iOSbody: some View {
+	var iOSbody: some View {
 		HStack {
 			Text("\(description)")
 			Spacer()
@@ -862,19 +864,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 					if measurement.value < 0 && positiveOnly {
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
-					//measurementUnit = measurement.unit.symbol
 				}
 			Picker("Unit for \(description)", selection: measurementUnit) {
-				if allowedUnitSystems.contains(.imperial) {
-					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol)
-					}
-				}
-				if allowedUnitSystems.contains(.SI) {
-					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol)
-					}
-				}
+				pickerBody
 			}
 //			.onChange(of: measurementUnit) {
 //				let unit = getUnit()
@@ -889,20 +881,6 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		.onChange(of: preferredUnitsData) { oldValue, newValue in
 			onChangeOfPreferredUnits()
 		}
-//		.onAppear {
-//			if !fixedUnitSystem {
-//				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
-//				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
-//				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
-//					if allowedUnitSystems == [.imperial] {
-//						measurementUnit = defaultImperialUnitSymbol
-//					}
-//					if allowedUnitSystems == [.SI] {
-//						measurementUnit = defaultSIUnitSymbol
-//					}
-//				}
-//			}
-//		}
 //		.toolbar {
 //			if thisMeasurementIsFocused {
 //				ToolbarItemGroup(placement: .keyboard) {
@@ -922,7 +900,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 //		}
 	}
 	
-	public var macOSbody: some View {
+	var macOSbody: some View {
 		HStack {
 			Text("\(description)")
 			Spacer()
@@ -934,19 +912,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 					if measurement.value < 0 && positiveOnly {
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
-					//measurementUnit = measurement.unit.symbol
 				}
 			Picker("", selection: measurementUnit) {
-				if allowedUnitSystems.contains(.imperial) {
-					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol)
-					}
-				}
-				if allowedUnitSystems.contains(.SI) {
-					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
-						Text(unitSymbol).tag(unitSymbol)
-					}
-				}
+				pickerBody
 			}.frame(minWidth: 70, idealWidth: 100, maxWidth: 120)
 //			.onChange(of: measurementUnit) {
 //				let unit = getUnit()
@@ -963,15 +931,32 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		}
 	}
 	
+	var pickerBody: some View {
+		Group {
+			if !allowedUnitSystems.contains(.SI) && !measurement.unit.isImperial || !allowedUnitSystems.contains(.imperial) && measurement.unit.isImperial {
+				Text(measurement.unit.symbol).tag(measurement.unit.symbol)
+			}
+			if allowedUnitSystems.contains(.imperial) {
+				ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
+					Text(unitSymbol).tag(unitSymbol)
+				}
+			}
+			if allowedUnitSystems.contains(.SI) {
+				ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
+					Text(unitSymbol).tag(unitSymbol)
+				}
+			}
+		}
+	}
+	
 	private func onChangeOfPreferredUnits() {
 		if !fixedUnitSystem {
-			self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
-//				if allowedUnitSystems == [.imperial] {
-//					measurementUnit = defaultImperialUnitSymbol
-//				}
-//				if allowedUnitSystems == [.SI] {
-//					measurementUnit = defaultSIUnitSymbol
-//				}
+			if allowedUnitSystems == [.imperial] {
+				measurementUnit.wrappedValue = defaultImperialUnitSymbol
+			}
+			if allowedUnitSystems == [.SI] {
+				measurementUnit.wrappedValue = defaultSIUnitSymbol
+			}
 		}
 	}
 }
@@ -982,8 +967,11 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	@State var measurement: Measurement<EngrUnitType>
 	@State private var measurementUnit: String
 	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
-	@State private var allowedUnitSystems: [UnitSystem]
-	let fixedUnitSystem: Bool
+	var fixedUnitSystem: Bool { specifiedUnitSystems != nil }
+	let specifiedUnitSystems: [UnitSystem]?
+	var allowedUnitSystems: [UnitSystem] {
+		specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
+	}
 	let defaultImperialUnitSymbol: String
 	let defaultSIUnitSymbol: String
 	
@@ -991,8 +979,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		self.description = description
 		_measurement = State(initialValue: measurement)
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
-		_allowedUnitSystems = State(initialValue: allowedUnits)
-		self.fixedUnitSystem = true
+		specifiedUnitSystems = allowedUnits
 		defaultImperialUnitSymbol = EngrUnitType.allImperialEngineeringUnitSymbols.first!
 		defaultSIUnitSymbol = EngrUnitType.allSIEngineeringUnitSymbols.first!
 	}
@@ -1000,8 +987,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		self.description = description
 		_measurement = State(initialValue: measurement)
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
-		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
-		self.fixedUnitSystem = false
+		specifiedUnitSystems = nil
 		self.defaultImperialUnitSymbol = defaultImperialUnit.symbol
 		self.defaultSIUnitSymbol = defaultSIUnit.symbol
 	}
@@ -1014,9 +1000,9 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			Spacer()
 			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.formatted(sigFigs: ...4))
 			Picker(os == .macOS ? "":"Unit for \(description)", selection: $measurementUnit) {
-//				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
-//					Text(unitSymbol).tag(unitSymbol)
-//				}
+				if !allowedUnitSystems.contains(.SI) && !measurement.unit.isImperial || !allowedUnitSystems.contains(.imperial) && measurement.unit.isImperial {
+					Text(measurement.unit.symbol).tag(measurement.unit.symbol)
+				}
 				if allowedUnitSystems.contains(.imperial) {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
 						Text(unitSymbol).tag(unitSymbol)
@@ -1037,7 +1023,6 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		}
 		.onChange(of: preferredUnitsData) { oldValue, newValue in
 			if !fixedUnitSystem {
-				self.allowedUnitSystems = UnitSystem.selection(for: preferredUnitsData)
 				if allowedUnitSystems == [.imperial] {
 					measurementUnit = defaultImperialUnitSymbol
 				}
@@ -1046,27 +1031,13 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 				}
 			}
 		}
-//		.onAppear {
-//			if !fixedUnitSystem {
-//				self.allowedUnitSystems = UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial")
-//				let isImperial = EngrUnitType.allImperialEngineeringUnitSymbols.contains(measurementUnit)
-//				if isImperial && !allowedUnitSystems.contains(.imperial) || !isImperial && !allowedUnitSystems.contains(.SI) {
-//					if allowedUnitSystems == [.imperial] {
-//						measurementUnit = defaultImperialUnitSymbol
-//					}
-//					if allowedUnitSystems == [.SI] {
-//						measurementUnit = defaultSIUnitSymbol
-//					}
-//				}
-//			}
-//		}
 	}
 }
+
 public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
 	
 	let description: String
 	@Binding var unit: EngrUnitType
-	//@State private var measurementUnit: String
 	var measurementUnit: Binding<String> {
 		Binding {
 			unit.symbol
@@ -1075,39 +1046,30 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 		}
 	}
 	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
-	let allowedFixedUnitSystems: [UnitSystem]?
+	let specifiedUnitSystems: [UnitSystem]?
 	var allowedUnitSystems: [UnitSystem] {
-		allowedFixedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
+		specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
 	}
-	var fixedUnitSystem: Bool { allowedFixedUnitSystems != nil }
-	let defaultImperialUnitSymbol: String
-	let defaultSIUnitSymbol: String
 	
 	/// A picker with a fixed list of units.
 	public init(_ description: String, unit: Binding<EngrUnitType>, allowedUnits: [UnitSystem])  {
 #if os(macOS)
-		self.description = description+":"
+		self.description = description+": "
 #else
 		self.description = description
 #endif
 		_unit = unit
-		//_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
-		allowedFixedUnitSystems = allowedUnits
-		defaultImperialUnitSymbol = EngrUnitType.allImperialEngineeringUnitSymbols.first!
-		defaultSIUnitSymbol = EngrUnitType.allSIEngineeringUnitSymbols.first!
+		specifiedUnitSystems = allowedUnits
 	}
-	/// A picker with variable list of units, based on the "preferredUnitSystem" `UserDefaults` key.
-	public init(_ description: String, unit: Binding<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType)  {
+	/// A picker based on the "preferredUnitSystem" `UserDefaults` key, set to either "SI", "Imperial", or "all".
+	public init(_ description: String, unit: Binding<EngrUnitType>)  {
 #if os(macOS)
-		self.description = description+":"
+		self.description = description+": "
 #else
 		self.description = description
 #endif
 		_unit = unit
-		//_measurementUnit = State(initialValue: unit.wrappedValue.symbol)
-		allowedFixedUnitSystems = nil
-		self.defaultImperialUnitSymbol = defaultImperialUnit.symbol
-		self.defaultSIUnitSymbol = defaultSIUnit.symbol
+		specifiedUnitSystems = nil
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -1117,9 +1079,9 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 //			Text(description)
 //			Spacer()
 			Picker(description, selection: measurementUnit) {
-//				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
-//					Text(unitSymbol).tag(unitSymbol)
-//				}
+				if !allowedUnitSystems.contains(.SI) && !unit.isImperial || !allowedUnitSystems.contains(.imperial) && unit.isImperial {
+					Text(unit.symbol).tag(unit.symbol)
+				}
 				if allowedUnitSystems.contains(.SI) {
 					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
 						Text(unitSymbol).tag(unitSymbol)
@@ -1131,20 +1093,8 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 					}
 				}
 			}
-//			.onChange(of: measurementUnit) {
-//				unit = EngrUnitType.unit(for: measurementUnit)
-//			}
 			.pickerStyle(.menu)
 		}
-//		.onChange(of: preferredUnitsData) { oldValue, newValue in
-//			if !fixedUnitSystem {
-//				if allowedUnitSystems == [.imperial] {
-//					measurementUnit = defaultImperialUnitSymbol
-//				} else if allowedUnitSystems == [.SI] {
-//					measurementUnit = defaultSIUnitSymbol
-//				}
-//			}
-//		}
 	}
 }
 
