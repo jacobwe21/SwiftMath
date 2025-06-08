@@ -795,6 +795,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	let specifiedUnitSystems: [UnitSystem]?
 	@State private var allowedUnitSystems: [UnitSystem]
 	let convertOnChangeOfUnits: Bool
+	let fixedUnit: Bool
 	
 	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
@@ -804,6 +805,17 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		self.positiveOnly = positiveOnly
 		specifiedUnitSystems = allowedUnits
 		convertOnChangeOfUnits = convertOnChange
+		fixedUnit = false
+	}
+	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false)  {
+		self.description = description
+		_measurement = measurement
+		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
+		_allowedUnitSystems = State(initialValue: measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI])
+		self.positiveOnly = positiveOnly
+		specifiedUnitSystems = measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI]
+		convertOnChangeOfUnits = false
+		fixedUnit = true
 	}
 	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
@@ -813,6 +825,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		self.positiveOnly = positiveOnly
 		specifiedUnitSystems = nil
 		convertOnChangeOfUnits = convertOnChange
+		fixedUnit = false
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -844,10 +857,14 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
 				}
-			ENGRUnitPicker<EngrUnitType>(description: "Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
-				.onChange(of: measurementUnit) {
-					onChangeOfUnit()
-				}
+			if fixedUnit {
+				Text("\(measurementUnit)")
+			} else {
+				ENGRUnitPicker<EngrUnitType>(description: "Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+					.onChange(of: measurementUnit) {
+						onChangeOfUnit()
+					}
+			}
 		}
 //		.toolbar {
 //			if thisMeasurementIsFocused {
@@ -881,11 +898,15 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 					}
 				}
-			ENGRUnitPicker<EngrUnitType>(description: "", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
-				.onChange(of: measurementUnit) {
-					onChangeOfUnit()
-				}
-				.frame(minWidth: 70, idealWidth: 100, maxWidth: 120)
+			if fixedUnit {
+				Text("\(measurementUnit)")
+			} else {
+				ENGRUnitPicker<EngrUnitType>(description: "Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+					.onChange(of: measurementUnit) {
+						onChangeOfUnit()
+					}
+					.frame(minWidth: 70, idealWidth: 100, maxWidth: 120)
+			}
 		}
 	}
 	
