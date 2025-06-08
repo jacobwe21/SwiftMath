@@ -994,7 +994,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		HStack {
 			Text(description)
 			Spacer()
-			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose.formatted(sigFigs: ...4))
+			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose().formatted(sigFigs: ...4))
 			ENGRUnitPicker<EngrUnitType>(description: os == .macOS ? "":"Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
 				.onChange(of: measurementUnit) {
 					let unit = EngrUnitType.unit(for: measurementUnit)
