@@ -776,16 +776,16 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	@Environment(\.deviceOS) var os
 	let description: String
 	@Binding var measurement: Measurement<EngrUnitType>
-	var measurementValue: Binding<Double> {
-		let unit = EngrUnitType.unit(for: measurement.unit.symbol)
-		return Binding {
-			measurement.converted(to: unit).value
-			//measurement.value
-		} set: { newValue in
-			//measurement.value = newValue
-			measurement = Measurement(value: newValue, unit: unit)
-		}
-	}
+//	var measurementValue: Binding<Double> {
+//		let unit = EngrUnitType.unit(for: measurement.unit.symbol)
+//		return Binding {
+//			measurement.converted(to: unit).value
+//			//measurement.value
+//		} set: { newValue in
+//			//measurement.value = newValue
+//			measurement = Measurement(value: newValue, unit: unit)
+//		}
+//	}
 	@State private var measurementUnit: String
 	//let minValue: Measurement<EngrUnitType>?
 	//let maxValue: Measurement<EngrUnitType>?
@@ -847,15 +847,13 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		HStack {
 			Text("\(description)")
 			Spacer()
-			TextField(description, value: measurementValue, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+			TextField(description, value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
 				.keyboardType(.numbersAndPunctuation)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
 				.focused($thisMeasurementIsFocused)
 				.onSubmit {
-					if measurement.value < 0 && positiveOnly {
-						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
-					}
+					validateMeasurementValue()
 				}
 			if fixedUnit {
 				Text("\(measurementUnit)")
@@ -889,14 +887,12 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		HStack {
 			Text("\(description)")
 			Spacer()
-			TextField(description, value: measurementValue, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+			TextField(description, value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
 				.focused($thisMeasurementIsFocused)
 				.onSubmit {
-					if measurement.value < 0 && positiveOnly {
-						measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
-					}
+					validateMeasurementValue()
 				}
 			if fixedUnit {
 				Text("\(measurementUnit)")
@@ -910,11 +906,18 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		}
 	}
 	
+	private func validateMeasurementValue() {
+		if measurement.value < 0 && positiveOnly {
+			//measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
+			measurement.value = abs(measurement.value)
+		}
+	}
+	
 	private func onChangeOfUnit() {
 		let unit = EngrUnitType.unit(for: measurementUnit)
 		if convertOnChangeOfUnits {
-			//measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
-			measurement = measurement.converted(to: unit)
+			measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
+			//measurement = measurement.converted(to: unit)
 		} else {
 			measurement = Measurement(value: measurement.value, unit: unit)
 		}
