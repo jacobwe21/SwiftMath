@@ -922,7 +922,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		}
 	}
 }
-public struct ENGRSplitValueField: View {
+public struct ENGRValueFixedUnitField: View {
 	
 	@Environment(\.deviceOS) var os
 	let description: String
@@ -933,10 +933,10 @@ public struct ENGRSplitValueField: View {
 	@FocusState var thisMeasurementIsFocused: Bool
 	let positiveOnly: Bool
 	
-	public init(_ description: String, _ measurement: Binding<Double>, unit: String, positiveOnly: Bool = false, convertOnChange: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Double>, unitSymbol: String, positiveOnly: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
 		_measurement = measurement
-		self.unit = unit
+		self.unit = unitSymbol
 		self.positiveOnly = positiveOnly
 	}
 	
