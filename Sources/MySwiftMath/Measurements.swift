@@ -917,7 +917,6 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		let unit = EngrUnitType.unit(for: measurementUnit)
 		if convertOnChangeOfUnits {
 			measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
-			//measurement = measurement.converted(to: unit)
 		} else {
 			measurement = Measurement(value: measurement.value, unit: unit)
 		}
