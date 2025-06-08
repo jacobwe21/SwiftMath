@@ -807,16 +807,6 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
 	}
-	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false)  {
-		self.description = description
-		_measurement = measurement
-		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
-		_allowedUnitSystems = State(initialValue: measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI])
-		self.positiveOnly = positiveOnly
-		specifiedUnitSystems = measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI]
-		convertOnChangeOfUnits = false
-		fixedUnit = true
-	}
 	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
 		_measurement = measurement
@@ -826,6 +816,16 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		specifiedUnitSystems = nil
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
+	}
+	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false)  {
+		self.description = description
+		_measurement = measurement
+		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
+		_allowedUnitSystems = State(initialValue: measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI])
+		self.positiveOnly = positiveOnly
+		specifiedUnitSystems = measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI]
+		convertOnChangeOfUnits = false
+		fixedUnit = true
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -919,6 +919,64 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
 		} else {
 			measurement = Measurement(value: measurement.value, unit: unit)
+		}
+	}
+}
+public struct ENGRSplitValueField: View {
+	
+	@Environment(\.deviceOS) var os
+	let description: String
+	@Binding var measurement: Double
+	let unit: String
+	//let minValue: Measurement<EngrUnitType>?
+	//let maxValue: Measurement<EngrUnitType>?
+	@FocusState var thisMeasurementIsFocused: Bool
+	let positiveOnly: Bool
+	
+	public init(_ description: String, _ measurement: Binding<Double>, unit: String, positiveOnly: Bool = false, convertOnChange: Bool = false)  {
+		self.description = description
+		_measurement = measurement
+		self.unit = unit
+		self.positiveOnly = positiveOnly
+	}
+	
+	public var body: some View {
+		HStack {
+			Text("\(description)")
+			Spacer()
+			TextField(description, value: $measurement, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+				.textFieldStyle(.roundedBorder)
+				.notMacOS{ v in
+					v.keyboardType(.numbersAndPunctuation)
+				}
+				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
+				.focused($thisMeasurementIsFocused)
+				.onSubmit {
+					validateMeasurementValue()
+				}
+			Text("\(unit)")
+		}
+//		.toolbar {
+//			if thisMeasurementIsFocused {
+//				ToolbarItemGroup(placement: .keyboard) {
+//					if !measurement.unit.positiveOnly && !positiveOnly {
+//						Button("Negate", systemImage: "plus.forwardslash.minus") {
+//							measurement = Measurement(value: -measurement.value, unit: measurement.unit)
+//						}
+//					}
+//					Spacer()
+//					Button {
+//						thisMeasurementIsFocused = false
+//					} label: {
+//						Text("Done").foregroundStyle(Color.accentColor)
+//					}
+//				}
+//			}
+//		}
+	}
+	private func validateMeasurementValue() {
+		if measurement < 0 && positiveOnly {
+			measurement = abs(measurement)
 		}
 	}
 }
