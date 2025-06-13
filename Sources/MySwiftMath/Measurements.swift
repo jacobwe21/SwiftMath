@@ -755,7 +755,7 @@ public extension Measurement3D {
 	}
 }
 
-public enum UnitSystem: String, CaseIterable, Identifiable, Hashable {
+public enum UnitSystem: String, CaseIterable, Identifiable, Hashable, Sendable {
 	case imperial = "Imperial", SI = "SI"
 	public var id: String { rawValue }
 	public static func selection(for storedData: String) -> [UnitSystem] {
@@ -771,6 +771,9 @@ public extension Array where Element == UnitSystem {
 	}
 }
 
+#if canImport(UIKit)
+import UIKit
+#endif
 public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
 	
 	@Environment(\.deviceOS) var os
@@ -843,13 +846,38 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		}
 	}
 	
+#if os(macOS)
+	var macOSbody: some View {
+		HStack {
+			Text("\(description)")
+			Spacer()
+			TextField(description, value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+				.textFieldStyle(.roundedBorder)
+				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
+				.focused($thisMeasurementIsFocused)
+				.onSubmit {
+					validateMeasurementValue()
+				}
+			if fixedUnit {
+				Text("\(measurementUnit)")
+			} else {
+				ENGRUnitPicker<EngrUnitType>(description: "Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+					.onChange(of: measurementUnit) {
+						onChangeOfUnit()
+					}
+					.frame(minWidth: 70, idealWidth: 100, maxWidth: 120)
+			}
+		}
+	}
+	
+#else
 	var iOSbody: some View {
 		HStack {
 			Text("\(description)")
 			Spacer()
 			TextField(description, value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
-				.keyboardType(.numbersAndPunctuation)
+				.keyboardType(UIKeyboardType.numbersAndPunctuation)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
 				.focused($thisMeasurementIsFocused)
 				.onSubmit {
@@ -882,29 +910,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 //			}
 //		}
 	}
-	
-	var macOSbody: some View {
-		HStack {
-			Text("\(description)")
-			Spacer()
-			TextField(description, value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
-				.textFieldStyle(.roundedBorder)
-				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
-				.focused($thisMeasurementIsFocused)
-				.onSubmit {
-					validateMeasurementValue()
-				}
-			if fixedUnit {
-				Text("\(measurementUnit)")
-			} else {
-				ENGRUnitPicker<EngrUnitType>(description: "Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
-					.onChange(of: measurementUnit) {
-						onChangeOfUnit()
-					}
-					.frame(minWidth: 70, idealWidth: 100, maxWidth: 120)
-			}
-		}
-	}
+#endif
 	
 	private func validateMeasurementValue() {
 		if measurement.value < 0 && positiveOnly {
@@ -946,9 +952,9 @@ public struct ENGRValueFixedUnitField: View {
 			Spacer()
 			TextField(description, value: $measurement, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
-				.notMacOS{ v in
-					v.keyboardType(.numbersAndPunctuation)
-				}
+			#if !os(macOS)
+				.keyboardType(UIKeyboardType.numbersAndPunctuation)
+			#endif
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
 				.focused($thisMeasurementIsFocused)
 				.onSubmit {

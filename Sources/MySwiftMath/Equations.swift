@@ -447,7 +447,7 @@ public struct Math {
 			let dydx = makeDerivative() as! PolynomialEQ
 			return (try? dydx.zeros(in: range)) ?? []
 		}
-		public static var zero: Math.PolynomialEQ = Math.PolynomialEQ(y: 0)
+		public static let zero: Math.PolynomialEQ = Math.PolynomialEQ(y: 0)
 		public static func + (lhs: Math.PolynomialEQ, rhs: Math.PolynomialEQ) -> Math.PolynomialEQ {
 			Math.PolynomialEQ(terms: lhs.terms+rhs.terms)
 		}
