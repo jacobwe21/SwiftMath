@@ -976,25 +976,28 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	
 	@Environment(\.deviceOS) var os
 	let description: String
-	@State private var measurement: Measurement<EngrUnitType>
+	let measurement: Measurement<EngrUnitType>
 	@State private var measurementUnit: String
 	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
 	let specifiedUnitSystems: [UnitSystem]?
 	@State private var allowedUnitSystems: [UnitSystem]
+	let tolerance: Double
 	
-	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem])  {
+	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem], tolerance: Double = 0.000001)  {
 		self.description = description
-		_measurement = State(initialValue: measurement)
+		self.measurement = measurement
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
 		_allowedUnitSystems = State(initialValue: allowedUnits)
 		specifiedUnitSystems = allowedUnits
+		self.tolerance = tolerance
 	}
-	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType)  {
+	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, tolerance: Double = 0.000001)  {
 		self.description = description
-		_measurement = State(initialValue: measurement)
+		self.measurement = measurement
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
 		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
 		specifiedUnitSystems = nil
+		self.tolerance = tolerance
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -1003,12 +1006,8 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		HStack {
 			Text(description)
 			Spacer()
-			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose().formatted(sigFigs: ...4))
+			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(sigFigs: ...6))
 			ENGRUnitPicker<EngrUnitType>(description: os == .macOS ? "":"Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
-				.onChange(of: measurementUnit) {
-					let unit = EngrUnitType.unit(for: measurementUnit)
-					measurement = Measurement(value: measurement.converted(to: unit).value, unit: unit)
-				}
 				.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
 		}
 		.onChange(of: preferredUnitsData) {
