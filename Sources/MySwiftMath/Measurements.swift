@@ -517,6 +517,9 @@ public extension Measurement where UnitType: Dimension {
 	init() {
 		self.init(value: 0, unit: .baseUnit())
 	}
+	init(value: Double) {
+		self.init(value: value, unit: .baseUnit())
+	}
 	func baseUnitValue() -> Double {
 		return self.converted(to: .baseUnit()).value
 	}
