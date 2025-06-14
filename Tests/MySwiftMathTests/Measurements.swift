@@ -69,6 +69,32 @@ final class MeasurementTests: XCTestCase {
 		XCTAssertEqual(a1.value, 0.7375610332, accuracy: 0.001)
 	}
 	
+	func testUnitAngleConversions() {
+		var a1 = Measurement<UnitAngle>(value: 45, unit: .degrees)
+		a1.convert(to: .slope)
+		XCTAssertEqual(a1.value, 1, accuracy: 0.00000000001)
+		
+		a1 = Measurement<UnitAngle>(value: 100, unit: .percentSlope)
+		a1.convert(to: .degrees)
+		XCTAssertEqual(a1.value, 45, accuracy: 0.00000000001)
+		
+		a1 = Measurement<UnitAngle>(value: Double.infinity, unit: .percentSlope)
+		a1.convert(to: .degrees)
+		XCTAssertEqual(a1.value, 90, accuracy: 0.00000000001)
+		
+		a1 = Measurement<UnitAngle>(value: -Double.infinity, unit: .slope)
+		a1.convert(to: .degrees)
+		XCTAssertEqual(a1.value, -90, accuracy: 0.00000000001)
+		
+		a1 = Measurement<UnitAngle>(value: 90, unit: .degrees)
+		a1.convert(to: .slope)
+		XCTAssertEqual(a1.value, Double.infinity, accuracy: 0.00000000001)
+		
+		a1 = Measurement<UnitAngle>(value: -90, unit: .degrees)
+		a1.convert(to: .percentSlope)
+		XCTAssertEqual(a1.value, -Double.infinity, accuracy: 0.00000000001)
+	}
+	
 	func testUnitForceConversions() {
 		var a1 = Measurement<UnitForce>(value: 1, unit: .kip)
 		a1.convert(to: .pound)
@@ -83,7 +109,7 @@ final class MeasurementTests: XCTestCase {
 		var work = a1*x1
 		work.convert(to: .kilonewtonMeters)
 		work.convert(to: .kipInches)
-		XCTAssertEqual(work.value, 12, accuracy: 0.00000001)
+		XCTAssertEqual(work.value, 12, accuracy: 0.0000001)
 		var distributedForce = Measurement<UnitLinearForce>(value: 1, unit: .kipsPerFoot)
 		distributedForce.convert(to: .kilonewtonsPerMillimeter)
 		var a2 = distributedForce*x1

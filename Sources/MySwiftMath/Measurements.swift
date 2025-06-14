@@ -6,6 +6,9 @@
 
 import Foundation
 import MySwift
+import simd
+import SwiftUI
+import Spatial
 
 public protocol EngineeringUnit: Dimension {
 	associatedtype EngrDimension: EngineeringUnit
@@ -336,20 +339,48 @@ extension UnitTemperature: EngineeringUnit {
 	}
 }
 extension UnitAngle: EngineeringUnit {
-	public static let percentSlope = UnitAngle(symbol: "%", converter: UnitConverterPercentSlope())
+	public static let slope = UnitAngle(symbol: "slope", converter: UnitSlopeConverter())
+	public static let percentSlope = UnitAngle(symbol: "% slope", converter: UnitSlopeConverter(usePercentSlope: true))
 	public var isImperial: Bool { false }
-	public static let allEngineeringUnits: [UnitAngle] = [.degrees,.radians,.gradians,.revolutions,.percentSlope]
+	public static let allEngineeringUnits: [UnitAngle] = [.slope,.percentSlope,.degrees,.radians,.gradians,.revolutions]
 	public static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
 	public static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
-	class UnitConverterPercentSlope: UnitConverter, @unchecked Sendable {
+	class UnitSlopeConverter: UnitConverter, @unchecked Sendable {
+		let usePercentSlope: Bool
+		init(usePercentSlope: Bool = false) {
+			self.usePercentSlope = usePercentSlope
+		}
 		override func baseUnitValue(fromValue value: Double) -> Double {
-			atan(value*0.01)
+			if value == Double.infinity || value > Double.greatestFiniteMagnitude {
+				return 90
+			} else if value == -Double.infinity || value < -Double.greatestFiniteMagnitude {
+				return -90
+			} else {
+				return atan(value*(usePercentSlope ? 0.01:1))*180.0/Double.pi // Convert to Degrees
+			}
 		}
 		override func value(fromBaseUnitValue baseUnitValue: Double) -> Double {
-			tan(baseUnitValue)*100
+			let normalized360Value = baseUnitValue.truncatingRemainder(dividingBy: 360)
+			if normalized360Value == 90 || normalized360Value == -270 {
+				return Double.infinity
+			} else if normalized360Value == -90 || normalized360Value == 270 {
+				return -Double.infinity
+			} else {
+				return tan(normalized360Value*Double.pi/180.0)*(usePercentSlope ? 100:1)
+			}
 		}
 	}
 	public var mixedUnitSystems: Bool { true }
+}
+public extension Measurement<UnitAngle> {
+	var angle: Angle { Angle(degrees: self.baseUnitValue()) }
+	init(angle: Angle) {
+		self = Measurement(value: angle.degrees, unit: .degrees)
+	}
+	var angle2D: Angle2D { Angle2D(degrees: self.baseUnitValue()) }
+	init(angle2D: Angle2D) {
+		self = Measurement(value: angle2D.degrees, unit: .degrees)
+	}
 }
 
 public extension Measurement {
@@ -546,8 +577,6 @@ extension Measurement: @retroactive AdditiveArithmetic where UnitType: Dimension
 //	}
 //}
 
-import simd
-import SwiftUI
 public struct Measurement3D<UnitType>: Comparable, CustomDebugStringConvertible, CustomStringConvertible, Hashable, Codable where UnitType: Unit {
 	
 	/// The unit component of the measurement.

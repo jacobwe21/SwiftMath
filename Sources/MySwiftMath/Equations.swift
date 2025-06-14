@@ -17,13 +17,12 @@ public protocol MathEquation: CustomStringConvertible, Sendable {
 	func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double) -> (min: Double, max: Double)
 }
 extension MathEquation {
-	public func definiteIntegral(over domain: ClosedRange<Double>, absoluteTolerance: Double = 1.0e-8, relativeTolerance: Double = 1.0e-2) throws -> Double {
+	public func definiteIntegral(over domain: ClosedRange<Double>, absoluteTolerance: Double = 1.0e-8, relativeTolerance: Double = 1.0e-6) throws -> Double {
 		let q = Quadrature(integrator: .qags(maxIntervals: 12), absoluteTolerance: absoluteTolerance, relativeTolerance: relativeTolerance)
 		let result = q.integrate(over: domain, integrand: callAsFunction)
 		switch result {
-		case .success((let integralResult, let estimatedAbsoluteError)):
-			print("quadrature success:", integralResult,
-				  estimatedAbsoluteError)
+		case .success((let integralResult, _)):
+			//print("quadrature success:", integralResult, estimatedAbsoluteError)
 			return integralResult
 		case .failure(let error):
 			print("quadrature error:", error.errorDescription)

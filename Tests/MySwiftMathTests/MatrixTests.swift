@@ -90,7 +90,7 @@ final class MatrixTests: XCTestCase {
 			[1,3,2,-8,13,3,2],
 		])
 		det = try! A.determinant()
-		XCTAssertTrue((det+4715536).isApproxEqual(to: 0))
+		XCTAssertEqual((det+4715536), 0, accuracy: 1e-8)
 		
 		A = Matrix<Double>([
 			[2,3,8,5,1,10,2],
@@ -102,7 +102,7 @@ final class MatrixTests: XCTestCase {
 			[1,3,2,-8,13,3,2],
 		])
 		det = try! A.determinant()
-		XCTAssertTrue((det-1681988).isApproxEqual(to: 0))
+		XCTAssertEqual((det-1681988), 0, accuracy: 1e-8)
 	}
 	
 	func testLUDecomposition() {
