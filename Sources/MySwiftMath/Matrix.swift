@@ -1076,34 +1076,35 @@ nonisolated public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomString
 //		return i + 1
 //	}
 //}
-@available(iOS 26.0.0, macOS 26.0.0, *)
-extension Array where Element: BinaryFloatingPoint {
-	init<let bufferSize: Int>(_ inlineArray: borrowing InlineArray<bufferSize, Element>) {
-		var result = Array<Element>()
-		for i in inlineArray.indices {
-			result.append(inlineArray[i])
-		}
-		self = result
-//		self = Array(unsafeUninitializedCapacity: bufferSize) { pointerBuffer, initializedCount in
-//			initializedCount = bufferSize
-//			for i in inlineArray.indices {
-//				pointerBuffer[i] = inlineArray[i]
-//				//pointerBuffer.baseAddress.?.initialize(to: flatValues[i])
-//			}
-//		}
-	}
-}
 
-@available(iOS 26.0.0, macOS 26.0.0, *)
-extension InlineArray: @retroactive Equatable where Element: Equatable {
-	public static func == <let lhsN: Int, let rhsN: Int>(lhs: InlineArray<lhsN, Self.Element>, rhs: InlineArray<rhsN, Self.Element>) -> Bool {
-		guard lhs.count == rhs.count else { return false }
-		for i in lhs.indices {
-			if lhs[i] != rhs[i] { return false }
-		}
-		return true
-	}
-}
+//@available(iOS 26.0.0, macOS 26.0.0, *)
+//extension Array where Element: BinaryFloatingPoint {
+//	init<let bufferSize: Int>(_ inlineArray: borrowing InlineArray<bufferSize, Element>) {
+//		var result = Array<Element>()
+//		for i in inlineArray.indices {
+//			result.append(inlineArray[i])
+//		}
+//		self = result
+////		self = Array(unsafeUninitializedCapacity: bufferSize) { pointerBuffer, initializedCount in
+////			initializedCount = bufferSize
+////			for i in inlineArray.indices {
+////				pointerBuffer[i] = inlineArray[i]
+////				//pointerBuffer.baseAddress.?.initialize(to: flatValues[i])
+////			}
+////		}
+//	}
+//}
+
+//@available(iOS 26.0.0, macOS 26.0.0, *)
+//extension InlineArray: @retroactive Equatable where Element: Equatable {
+//	public static func == <let lhsN: Int, let rhsN: Int>(lhs: InlineArray<lhsN, Self.Element>, rhs: InlineArray<rhsN, Self.Element>) -> Bool {
+//		guard lhs.count == rhs.count else { return false }
+//		for i in lhs.indices {
+//			if lhs[i] != rhs[i] { return false }
+//		}
+//		return true
+//	}
+//}
 
 //@available(iOS 26.0.0, macOS 26.0.0, *)
 //nonisolated private struct InlineMatrix<let buffer: Int, T: BinaryFloatingPoint>: Equatable, CustomStringConvertible, Copyable {
