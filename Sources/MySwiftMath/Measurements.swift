@@ -45,8 +45,8 @@ public final class UnitInverseTemperature: Dimension, EngineeringUnit, @unchecke
 	public static let allEngineeringUnits: [UnitInverseTemperature] = [.inverseKelvin, .inverseCelsius, .inverseFahrenheit]
 	
 	public static let inverseKelvin = UnitInverseTemperature(symbol: "1/K", converter: UnitConverterLinear(coefficient: 1))
-	public static let inverseCelsius = UnitInverseTemperature(symbol: "1/°C", converter: UnitConverterInverting(coefficient: 1, constant: -237.15))
-	public static let inverseFahrenheit = UnitInverseTemperature(symbol: "1/°F", converter: UnitConverterInverting(coefficient: 5/9, constant: -457.87))
+	public static let inverseCelsius = UnitInverseTemperature(symbol: "1/°C", converter: UnitConverterLinearInverting(coefficient: 1, constant: -237.15))
+	public static let inverseFahrenheit = UnitInverseTemperature(symbol: "1/°F", converter: UnitConverterLinearInverting(coefficient: 5/9, constant: -457.87))
 
 	public override class func baseUnit() -> Self {
 		return UnitInverseTemperature.inverseKelvin as! Self
@@ -59,38 +59,49 @@ public final class UnitInverseTemperature: Dimension, EngineeringUnit, @unchecke
 		} else { return false }
 	}
 	public var positiveOnly: Bool { self == .inverseKelvin }
-	
-	class UnitConverterInverting: UnitConverter, @unchecked Sendable {
-		let coefficient: Double
-		let constant: Double
-		let doubleInversion: Bool
-		init(doubleInversion: Bool = true, coefficient: Double = 1, constant: Double = 0) {
-			self.coefficient = coefficient
-			self.constant = constant
-			self.doubleInversion = doubleInversion
-		}
-		override func baseUnitValue(fromValue value: Double) -> Double {
-			let x: Double
-			if doubleInversion {
-				guard value != 0 else { return .infinity }
-				x = 1/value
-			} else { x = value }
-			let x2 = (x - constant)
-			guard x2 != 0 else { return .infinity }
-			return coefficient/x2
-		}
-		override func value(fromBaseUnitValue baseUnitValue: Double) -> Double {
-			guard baseUnitValue != 0 else { return .infinity }
-			let x = coefficient/baseUnitValue + constant
-			if doubleInversion {
-				guard x != 0 else { return .infinity }
-				return 1/x
-			} else {
-				return x
-			}
+}
+public final class UnitConverterLinearInverting: UnitConverter, NSSecureCoding, @unchecked Sendable {
+	let coefficient: Double
+	let constant: Double
+	let doubleInversion: Bool
+	init(doubleInversion: Bool = true, coefficient: Double = 1, constant: Double = 0) {
+		self.coefficient = coefficient
+		self.constant = constant
+		self.doubleInversion = doubleInversion
+	}
+	public override func baseUnitValue(fromValue value: Double) -> Double {
+		let x: Double
+		if doubleInversion {
+			guard value != 0 else { return .infinity }
+			x = 1/value
+		} else { x = value }
+		let x2 = (x - constant)
+		guard x2 != 0 else { return .infinity }
+		return coefficient/x2
+	}
+	public override func value(fromBaseUnitValue baseUnitValue: Double) -> Double {
+		guard baseUnitValue != 0 else { return .infinity }
+		let x = coefficient/baseUnitValue + constant
+		if doubleInversion {
+			guard x != 0 else { return .infinity }
+			return 1/x
+		} else {
+			return x
 		}
 	}
+	public static let supportsSecureCoding: Bool = true
+	public required init?(coder: NSCoder) {
+		self.coefficient = coder.decodeDouble(forKey: "UnitConverterInverting().coefficient")
+		self.constant = coder.decodeDouble(forKey: "UnitConverterInverting().constant")
+		self.doubleInversion = coder.decodeBool(forKey: "UnitConverterInverting().doubleInversion")
+	}
+	public func encode(with coder: NSCoder) {
+		coder.encode(coefficient, forKey: "UnitConverterInverting().coefficient")
+		coder.encode(constant, forKey: "UnitConverterInverting().constant")
+		coder.encode(doubleInversion, forKey: "UnitConverterInverting().doubleInversion")
+	}
 }
+
 ///  A unit of measure for density (technically the same as `UnitConcentrationMass`, but kg/m³ is the base unit for density).
 public final class UnitDensity: Dimension, EngineeringUnit, @unchecked Sendable {
 	public static let allEngineeringUnits: [UnitDensity] = [.kilogramPerCubicMeter, .poundsPerCubicFoot]
@@ -345,31 +356,6 @@ extension UnitAngle: EngineeringUnit {
 	public static let allEngineeringUnits: [UnitAngle] = [.slope,.percentSlope,.degrees,.radians,.gradians,.revolutions]
 	public static var allImperialEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
 	public static var allSIEngineeringUnitSymbols: [String] { allEngineeringUnits.map({$0.symbol}) }
-	class UnitSlopeConverter: UnitConverter, @unchecked Sendable {
-		let usePercentSlope: Bool
-		init(usePercentSlope: Bool = false) {
-			self.usePercentSlope = usePercentSlope
-		}
-		override func baseUnitValue(fromValue value: Double) -> Double {
-			if value == Double.infinity || value > Double.greatestFiniteMagnitude {
-				return 90
-			} else if value == -Double.infinity || value < -Double.greatestFiniteMagnitude {
-				return -90
-			} else {
-				return atan(value*(usePercentSlope ? 0.01:1))*180.0/Double.pi // Convert to Degrees
-			}
-		}
-		override func value(fromBaseUnitValue baseUnitValue: Double) -> Double {
-			let normalized360Value = baseUnitValue.truncatingRemainder(dividingBy: 360)
-			if normalized360Value == 90 || normalized360Value == -270 {
-				return Double.infinity
-			} else if normalized360Value == -90 || normalized360Value == 270 {
-				return -Double.infinity
-			} else {
-				return tan(normalized360Value*Double.pi/180.0)*(usePercentSlope ? 100:1)
-			}
-		}
-	}
 	public var mixedUnitSystems: Bool { true }
 }
 public extension Measurement<UnitAngle> {
@@ -380,6 +366,38 @@ public extension Measurement<UnitAngle> {
 	var angle2D: Angle2D { Angle2D(degrees: self.baseUnitValue()) }
 	init(angle2D: Angle2D) {
 		self = Measurement(value: angle2D.degrees, unit: .degrees)
+	}
+}
+final class UnitSlopeConverter: UnitConverter, NSSecureCoding, @unchecked Sendable {
+	let usePercentSlope: Bool
+	init(usePercentSlope: Bool = false) {
+		self.usePercentSlope = usePercentSlope
+	}
+	override func baseUnitValue(fromValue value: Double) -> Double {
+		if value == Double.infinity || value > Double.greatestFiniteMagnitude {
+			return 90
+		} else if value == -Double.infinity || value < -Double.greatestFiniteMagnitude {
+			return -90
+		} else {
+			return atan(value*(usePercentSlope ? 0.01:1))*180.0/Double.pi // Convert to Degrees
+		}
+	}
+	override func value(fromBaseUnitValue baseUnitValue: Double) -> Double {
+		let normalized360Value = baseUnitValue.truncatingRemainder(dividingBy: 360)
+		if normalized360Value == 90 || normalized360Value == -270 {
+			return Double.infinity
+		} else if normalized360Value == -90 || normalized360Value == 270 {
+			return -Double.infinity
+		} else {
+			return tan(normalized360Value*Double.pi/180.0)*(usePercentSlope ? 100:1)
+		}
+	}
+	static let supportsSecureCoding: Bool = true
+	required init?(coder: NSCoder) {
+		usePercentSlope = coder.decodeBool(forKey: "UnitSlopeConverter().usePercentSlope")
+	}
+	func encode(with coder: NSCoder) {
+		coder.encode(usePercentSlope, forKey: "UnitSlopeConverter().usePercentSlope")
 	}
 }
 
