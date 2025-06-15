@@ -844,38 +844,42 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	//let maxValue: Measurement<EngrUnitType>?
 	@FocusState var thisMeasurementIsFocused: Bool
 	let positiveOnly: Bool
+	let nonZero: Bool
 	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
 	let specifiedUnitSystems: [UnitSystem]?
 	@State private var allowedUnitSystems: [UnitSystem]
 	let convertOnChangeOfUnits: Bool
 	let fixedUnit: Bool
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, convertOnChange: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		_allowedUnitSystems = State(initialValue: allowedUnits)
 		self.positiveOnly = positiveOnly
+		self.nonZero = nonZero
 		specifiedUnitSystems = allowedUnits
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
 	}
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, convertOnChange: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
 		self.positiveOnly = positiveOnly
+		self.nonZero = nonZero
 		specifiedUnitSystems = nil
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
 	}
-	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false)  {
+	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		_allowedUnitSystems = State(initialValue: measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI])
 		self.positiveOnly = positiveOnly
+		self.nonZero = nonZero
 		specifiedUnitSystems = measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI]
 		convertOnChangeOfUnits = false
 		fixedUnit = true
@@ -967,6 +971,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			//measurement = Measurement(value: abs(measurement.value), unit: measurement.unit)
 			measurement.value = abs(measurement.value)
 		}
+		if nonZero && abs(measurement.value) < 1e-12 {
+			measurement.value = 0.001
+		}
 	}
 	
 	private func onChangeOfUnit() {
@@ -988,12 +995,14 @@ public struct ENGRValueFixedUnitField: View {
 	//let maxValue: Measurement<EngrUnitType>?
 	@FocusState var thisMeasurementIsFocused: Bool
 	let positiveOnly: Bool
+	let nonZero: Bool
 	
-	public init(_ description: String, _ measurement: Binding<Double>, unitSymbol: String, positiveOnly: Bool = false, convertOnChange: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Double>, unitSymbol: String, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		self.unit = unitSymbol
 		self.positiveOnly = positiveOnly
+		self.nonZero = nonZero
 	}
 	
 	public var body: some View {
@@ -1016,6 +1025,9 @@ public struct ENGRValueFixedUnitField: View {
 	private func validateMeasurementValue() {
 		if measurement < 0 && positiveOnly {
 			measurement = abs(measurement)
+		}
+		if nonZero && abs(measurement) < 1e-12 {
+			measurement = 0.001
 		}
 	}
 }
