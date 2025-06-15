@@ -9,6 +9,17 @@ import simd
 import Accelerate
 //import Surge
 
+// Error types for matrix operations
+public enum MatrixError: String, Error {
+	case nonMatchingDimensions = "Dimensions of matrices do not match."
+	case singularMatrix = "Matrix is singular."
+	case emptyMatrix = "Matrix is empty."
+	case notSquareMatrix = "Matrix is not square, and must be square for this operation."
+	case indexOutOfRange = "Index is out-of-range."
+	case computationFailure = "Computational Failure"
+	case matrixNotDecomposable = "Matrix not Decomposable"
+}
+
 nonisolated public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomStringConvertible {
 	
 	public let rows: Int
@@ -766,17 +777,6 @@ nonisolated public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomString
 			}
 		}
 		return (Q, R)
-	}
-	
-	// Error types for matrix operations
-	public enum MatrixError: String, Error {
-		case nonMatchingDimensions = "Dimensions of matrices do not match."
-		case singularMatrix = "Matrix is singular."
-		case emptyMatrix = "Matrix is empty."
-		case notSquareMatrix = "Matrix is not square, and must be square for this operation."
-		case indexOutOfRange = "Index is out-of-range."
-		case computationFailure = "Computational Failure"
-		case matrixNotDecomposable = "Matrix not Decomposable"
 	}
 	
 	/// Display row count x column count
@@ -1918,18 +1918,7 @@ nonisolated public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomString
 //		}
 //		return (Q, R)
 //	}
-//	
-//	// Error types for matrix operations
-//	public enum MatrixError: String, Error {
-//		case nonMatchingDimensions = "Dimensions of matrices do not match."
-//		case singularMatrix = "Matrix is singular."
-//		case emptyMatrix = "Matrix is empty."
-//		case notSquareMatrix = "Matrix is not square, and must be square for this operation."
-//		case indexOutOfRange = "Index is out-of-range."
-//		case computationFailure = "Computational Failure"
-//		case matrixNotDecomposable = "Matrix not Decomposable"
-//	}
-//	
+//
 //	/// Display row count x column count
 //	public var sizeDescription: String {
 //		"\(rows)x\(columns)"
@@ -2872,17 +2861,6 @@ nonisolated public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomString
 //			}
 //		}
 //		return (Q, R)
-//	}
-//	
-//	// Error types for matrix operations
-//	public enum MatrixError: String, Error {
-//		case nonMatchingDimensions = "Dimensions of matrices do not match."
-//		case singularMatrix = "Matrix is singular."
-//		case emptyMatrix = "Matrix is empty."
-//		case notSquareMatrix = "Matrix is not square, and must be square for this operation."
-//		case indexOutOfRange = "Index is out-of-range."
-//		case computationFailure = "Computational Failure"
-//		case matrixNotDecomposable = "Matrix not Decomposable"
 //	}
 //	
 //	/// Display row count x column count
@@ -3831,17 +3809,6 @@ nonisolated public struct Matrix<T: BinaryFloatingPoint>: Hashable, CustomString
 //			}
 //		}
 //		return (Q, R)
-//	}
-//	
-//	// Error types for matrix operations
-//	public enum MatrixError: String, Error {
-//		case nonMatchingDimensions = "Dimensions of matrices do not match."
-//		case singularMatrix = "Matrix is singular."
-//		case emptyMatrix = "Matrix is empty."
-//		case notSquareMatrix = "Matrix is not square, and must be square for this operation."
-//		case indexOutOfRange = "Index is out-of-range."
-//		case computationFailure = "Computational Failure"
-//		case matrixNotDecomposable = "Matrix not Decomposable"
 //	}
 //	
 //	/// Display row count x column count
