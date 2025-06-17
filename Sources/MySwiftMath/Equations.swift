@@ -34,7 +34,6 @@ extension MathEquation {
 public struct Math {
 	
 	public struct MultiEQ: MathEquation {
-		
 		public init(segments: [Segment]) {
 			self.segments = segments
 		}
@@ -296,6 +295,10 @@ public struct Math {
 		public static func diracDeltaEQ(x: Double) -> MultiEQ {
 			MultiEQ(segments: [.init(eq: Impulse(term: Double.infinity), xStart: x, xEnd: x, xStartIsInclusive: true, xEndIsInclusive: true)])
 		}
+	
+		public static func + (lhs: Math.MultiEQ, rhs: Math.MultiEQ) -> Math.MultiEQ {
+			Math.MultiEQ(segments: lhs.segments+rhs.segments)
+		}
 	}
 	
 	public struct PolynomialEQ: MathEquation, AdditiveArithmetic {
@@ -462,16 +465,13 @@ public struct Math {
 			return termDescriptions.joined(separator: " + ")
 		}
 		public struct Term: CustomStringConvertible, Sendable, Equatable {
-
+			public static let zero: Math.PolynomialEQ.Term = .init(0, exp: 1)
 			private(set) var degree: UInt
 			private(set) var coefficient: Double
 			
 			public init(_ coefficient: Double, exp degree: UInt = 0) {
 				self.degree = degree
 				self.coefficient = coefficient
-			}
-			public static func + (_ lhs: Self, _ rhs: Self) -> Self {
-				return Term(lhs.coefficient+rhs.coefficient, exp: lhs.degree)
 			}
 			public static func * (_ lhs: Self, _ rhs: Double) -> Self {
 				return Term(lhs.coefficient*rhs, exp: lhs.degree)
