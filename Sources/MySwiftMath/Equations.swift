@@ -8,13 +8,15 @@ import SwiftUI
 import Accelerate
 
 public protocol MathEquation: CustomStringConvertible, Sendable {
+	associatedtype Derivative: MathEquation
+	associatedtype AntiDerivative: MathEquation
 	func callAsFunction(_ x: Double) -> Double
-	func makeDerivative() -> MathEquation
-	func integrate(plus c: Double) -> MathEquation
-	mutating func scale(by rhs: Double)
+	func makeDerivative() -> Derivative
+	func integrate(plus c: Double) -> AntiDerivative
 	func scaled(by rhs: Double) -> Self
 	func criticalPoints(in range: ClosedRange<Double>?) -> [Double]
 	func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double) -> (min: Double, max: Double)
+	static prefix func - (lhs: Self) -> Self
 }
 extension MathEquation {
 	public func definiteIntegral(over domain: ClosedRange<Double>, absoluteTolerance: Double = 1.0e-8, relativeTolerance: Double = 1.0e-6) throws -> Double {
@@ -31,9 +33,84 @@ extension MathEquation {
 	}
 }
 
+public struct AnyMathEquation: MathEquation {
+	public typealias Derivative = AnyMathEquation
+	public typealias AntiDerivative = AnyMathEquation
+
+	enum EqType: Equatable {
+		case null, impulse, polynomial, other
+	}
+	
+	let eqType: EqType
+	private let _call: @Sendable (Double) -> Double
+	private let _makeDerivative: @Sendable () -> AnyMathEquation
+	private let _integrate: @Sendable (Double) -> AnyMathEquation
+	private let _scaled: @Sendable (Double) -> AnyMathEquation
+	private let _criticalPoints: @Sendable (ClosedRange<Double>?) -> [Double]
+	private let _minmax: @Sendable (ClosedRange<Double>?, Double) -> (min: Double, max: Double)
+	private let _negate: @Sendable () -> AnyMathEquation
+	private let _description: @Sendable () -> String
+
+	public init<E: MathEquation>(_ base: E) {
+		if base is Math.NullEQ {
+			eqType = .null
+		} else if base is Math.Impulse {
+			eqType = .impulse
+		} else if base is Math.PolynomialEQ {
+			eqType = .polynomial
+		} else {
+			eqType = .other
+		}
+		_call = base.callAsFunction
+		_makeDerivative = { AnyMathEquation(base.makeDerivative()) }
+		_integrate = { c in AnyMathEquation(base.integrate(plus: c)) }
+//		_scale = { equation, rhs in
+//			var baseCopy = base
+//			baseCopy.scale(by: rhs)
+//			equation = AnyMathEquation(baseCopy)
+//		}
+		_scaled = { rhs in AnyMathEquation(base.scaled(by: rhs)) }
+		_criticalPoints = base.criticalPoints
+		_minmax = base.minmaxValues
+		_negate = { AnyMathEquation(-base) }
+		_description = { base.description }
+	}
+
+	public func callAsFunction(_ x: Double) -> Double {
+		_call(x)
+	}
+	public func makeDerivative() -> AnyMathEquation {
+		_makeDerivative()
+	}
+	public func integrate(plus c: Double) -> AnyMathEquation {
+		_integrate(c)
+	}
+//	public mutating func scale(by rhs: Double) {
+//		_scale(&self, rhs)
+//	}
+	public func scaled(by rhs: Double) -> AnyMathEquation {
+		_scaled(rhs)
+	}
+	public func criticalPoints(in range: ClosedRange<Double>?) -> [Double] {
+		_criticalPoints(range)
+	}
+	public func minmaxValues(in range: ClosedRange<Double>?, num_dx: Double) -> (min: Double, max: Double) {
+		_minmax(range, num_dx)
+	}
+	public static prefix func - (lhs: AnyMathEquation) -> AnyMathEquation {
+		lhs._negate()
+	}
+	public var description: String {
+		_description()
+	}
+}
+
 public struct Math {
 	
 	public struct MultiEQ: MathEquation {
+		public init(_ eq: any MathEquation) {
+			self.segments = [Segment(eq: eq)]
+		}
 		public init(segments: [Segment]) {
 			self.segments = segments
 		}
@@ -46,13 +123,13 @@ public struct Math {
 		}
 		
 		public struct Segment: Sendable {
-			var eq: any MathEquation
+			var eq: AnyMathEquation
 			let xStart: Double
 			let xEnd: Double
 			let xStartIsInclusive: Bool
 			let xEndIsInclusive: Bool
 			init(eq: any MathEquation, xStart: Double = -Double.infinity, xEnd: Double = Double.infinity, xStartIsInclusive: Bool = false, xEndIsInclusive: Bool = false) {
-				self.eq = eq
+				self.eq = AnyMathEquation(eq)
 				self.xStart = xStart
 				self.xEnd = xEnd
 				self.xStartIsInclusive = xStartIsInclusive
@@ -63,9 +140,6 @@ public struct Math {
 			}
 			public init(equation: any MathEquation, range: ClosedRange<Double>) {
 				self.init(eq: equation, xStart: range.lowerBound, xEnd: range.upperBound, xStartIsInclusive: true, xEndIsInclusive: true)
-			}
-			public mutating func scale(by rhs: Double) {
-				eq.scale(by: rhs)
 			}
 		}
 		public private(set) var segments: [Segment]
@@ -80,11 +154,11 @@ public struct Math {
 			return result
 		}
 		
-		public func makeDerivative() -> any MathEquation {
+		public func makeDerivative() -> MultiEQ {
 			var newSegments: [Segment] = []
 			for s in segments {
-				if s.eq is Math.Impulse { continue }
-				if s.eq is Math.NullEQ { continue }
+				if s.eq.eqType == .impulse { continue }
+				if s.eq.eqType == .null { continue }
 				var segment = s
 				segment.eq = s.eq.makeDerivative()
 				newSegments.append(segment)
@@ -93,11 +167,11 @@ public struct Math {
 		}
 		
 		/// Integrates simple equations faster and results in less additional segments.
-		func quickIntegration(plus c: Double) -> (any MathEquation)? {
-			if segments.count == 0 { return NullEQ().integrate(plus: c) }
+		func quickIntegration(plus c: Double) -> MultiEQ? {
+			if segments.count == 0 { return MultiEQ(NullEQ().integrate(plus: c)) }
 			if segments.count == 1 {
 				var tempSegment = segments.first!
-				if tempSegment.eq is Math.Impulse {
+				if tempSegment.eq.eqType == .impulse {
 					tempSegment = Segment(eq: Math.PolynomialEQ(y: tempSegment.eq(0)), xStart: tempSegment.xStart, xEnd: Double.infinity, xStartIsInclusive: true, xEndIsInclusive: false)
 				} else {
 					let newEQ = tempSegment.eq.integrate(plus: c)
@@ -108,7 +182,7 @@ public struct Math {
 			return nil
 		}
 		func intergrateImpulseSegment(s: Segment) -> Segment {
-			guard s.eq is Math.Impulse else { fatalError("Segment \(s.eq) is not an Impulse") }
+			guard s.eq.eqType == .impulse else { fatalError("Segment \(s.eq) is not an Impulse") }
 			if s.eq(0).isInfinite {
 				return Segment(eq: Math.PolynomialEQ(y: 1), xStart: s.xStart, xEnd: Double.infinity, xStartIsInclusive: true, xEndIsInclusive: false)
 			} else {
@@ -116,7 +190,7 @@ public struct Math {
 			}
 		}
 		
-		public func integrateAtZero(plus c: Double, xStart: Double = -Double.infinity) -> any MathEquation {
+		public func integrateAtZero(plus c: Double, xStart: Double = -Double.infinity) -> MultiEQ {
 			if let result = quickIntegration(plus: c) { return result }
 			var newSegments: [Segment] = []
 			let sortedSegments = segments.sorted(by: {
@@ -128,7 +202,7 @@ public struct Math {
 			})
 			// Intergrate segments
 			for s in sortedSegments {
-				if s.eq is Math.Impulse {
+				if s.eq.eqType == .impulse {
 					newSegments.append(intergrateImpulseSegment(s: s))
 				} else {
 					var segment = s
@@ -144,7 +218,7 @@ public struct Math {
 			}
 			return MultiEQ(segments: newSegments)
 		}
-		public func integrateSmoothly(plus c: Double, xStart: Double = -Double.infinity) -> any MathEquation {
+		public func integrateSmoothly(plus c: Double, xStart: Double = -Double.infinity) -> MultiEQ {
 			if let result = quickIntegration(plus: c) { return result }
 			var newSegments: [Segment] = []
 			let sortedSegments = segments.sorted(by: {
@@ -156,7 +230,7 @@ public struct Math {
 			})
 			// Intergrate segments
 			for s in sortedSegments {
-				if s.eq is Math.Impulse {
+				if s.eq.eqType == .impulse {
 					newSegments.append(intergrateImpulseSegment(s: s))
 				} else {
 					var segment = s
@@ -177,7 +251,7 @@ public struct Math {
 			return MultiEQ(segments: newSegments)
 		}
 		
-		public func integrate(plus c: Double) -> any MathEquation {
+		public func integrate(plus c: Double) -> MultiEQ {
 			if let result = quickIntegration(plus: c) { return result }
 			var newSegments: [Segment] = []
 			let sortedSegments = segments.sorted(by: {
@@ -189,7 +263,7 @@ public struct Math {
 			})
 			// Intergrate segments
 			for s in sortedSegments {
-				if s.eq is Math.Impulse {
+				if s.eq.eqType == .impulse {
 					if s.eq(0).isInfinite {
 						newSegments.append(intergrateImpulseSegment(s: s))
 					} else {
@@ -213,14 +287,14 @@ public struct Math {
 		}
 		public mutating func scale(by rhs: Double) {
 			for i in segments.indices {
-				segments[i].eq.scale(by: rhs)
+				segments[i].eq = segments[i].eq.scaled(by: rhs)
 			}
 		}
 		public func scaled(by rhs: Double) -> Self {
 			var newSegments: [Segment] = []
 			for segment in segments {
 				var newSegment = segment
-				newSegment.eq.scale(by: rhs)
+				newSegment.eq = newSegment.eq.scaled(by: rhs)
 				newSegments.append(newSegment)
 			}
 			return Self.init(segments: newSegments)
@@ -299,6 +373,20 @@ public struct Math {
 		public static func + (lhs: Math.MultiEQ, rhs: Math.MultiEQ) -> Math.MultiEQ {
 			Math.MultiEQ(segments: lhs.segments+rhs.segments)
 		}
+		public static func - (lhs: Math.MultiEQ, rhs: Math.MultiEQ) -> Math.MultiEQ {
+			Math.MultiEQ(segments: lhs.segments+rhs.segments.map({
+				var result = $0
+				result.eq = -result.eq
+				return result
+			}))
+		}
+		public static prefix func - (rhs: Math.MultiEQ) -> Math.MultiEQ {
+			Math.MultiEQ(segments: rhs.segments.map({
+				var result = $0
+				result.eq = -result.eq
+				return result
+			}))
+		}
 	}
 	
 	public struct PolynomialEQ: MathEquation, AdditiveArithmetic {
@@ -360,7 +448,7 @@ public struct Math {
 			}
 			return result
 		}
-		public func makeDerivative() -> MathEquation {
+		public func makeDerivative() -> PolynomialEQ {
 			var newTerms = [Term]()
 			for term in terms {
 				if term.degree > 0 {
@@ -370,7 +458,7 @@ public struct Math {
 			if newTerms.isEmpty { return PolynomialEQ.zero }
 			return PolynomialEQ(terms: newTerms)
 		}
-		public func integrate(plus c: Double) -> MathEquation {
+		public func integrate(plus c: Double) -> PolynomialEQ {
 			var newTerms = [Term]()
 			for term in terms {
 				if term.degree >= 0 {
@@ -446,7 +534,7 @@ public struct Math {
 			return (minValue, maxValue)
 		}
 		public func criticalPoints(in range: ClosedRange<Double>?) -> [Double] {
-			let dydx = makeDerivative() as! PolynomialEQ
+			let dydx = makeDerivative()
 			return (try? dydx.zeros(in: range)) ?? []
 		}
 		public static let zero: Math.PolynomialEQ = Math.PolynomialEQ(y: 0)
@@ -456,6 +544,10 @@ public struct Math {
 		public static func - (lhs: Math.PolynomialEQ, rhs: Math.PolynomialEQ) -> Math.PolynomialEQ {
 			let rhsTerms = rhs.terms.map({Term(-$0.coefficient, exp: $0.degree)})
 			return Math.PolynomialEQ(terms: lhs.terms+rhsTerms)
+		}
+		public static prefix func - (rhs: Math.PolynomialEQ) -> Math.PolynomialEQ {
+			let rhsTerms = rhs.terms.map({Term(-$0.coefficient, exp: $0.degree)})
+			return Math.PolynomialEQ(terms: rhsTerms)
 		}
 		
 		public var description: String {
@@ -588,7 +680,6 @@ public struct Math {
 	
 	/// A defined value at an unspecified location.
 	public struct Impulse: MathEquation {
-		
 		public private(set) var term: Double
 
 		public init(term: Double) {
@@ -597,10 +688,10 @@ public struct Math {
 		public func callAsFunction(_ x: Double) -> Double {
 			return term
 		}
-		public func makeDerivative() -> MathEquation {
+		public func makeDerivative() -> NullEQ {
 			return NullEQ()
 		}
-		public func integrate(plus c: Double) -> MathEquation {
+		public func integrate(plus c: Double) -> PolynomialEQ {
 			return PolynomialEQ(terms: PolynomialEQ.Term(term, exp: 0))
 		}
 		public mutating func scale(by rhs: Double) {
@@ -620,6 +711,9 @@ public struct Math {
 		public var description: String {
 			return "\(term) (impulse)"
 		}
+		public static prefix func - (lhs: Math.Impulse) -> Math.Impulse {
+			return Impulse(term: -lhs.term)
+		}
 	}
 	
 	/// Equivalent to zero
@@ -629,10 +723,10 @@ public struct Math {
 		public func callAsFunction(_ x: Double) -> Double {
 			return 0
 		}
-		public func makeDerivative() -> MathEquation {
+		public func makeDerivative() -> NullEQ {
 			return NullEQ()
 		}
-		public func integrate(plus c: Double) -> MathEquation {
+		public func integrate(plus c: Double) -> PolynomialEQ {
 			return PolynomialEQ(terms: PolynomialEQ.Term(c, exp: 0))
 		}
 		public mutating func scale(by rhs: Double) {}
@@ -648,8 +742,10 @@ public struct Math {
 		public func criticalPoints(in: ClosedRange<Double>?) -> [Double] {
 			return []
 		}
+		public static prefix func - (lhs: Math.NullEQ) -> Math.NullEQ {
+			return lhs
+		}
 	}
-	
 }
 //public struct AnyMathEquation: MathEquation {
 //	private let _callAsFunction: (Double) -> Double
