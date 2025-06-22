@@ -862,7 +862,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
 	}
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
@@ -873,6 +873,17 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
 	}
+//	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
+//		self.description = description
+//		_measurement = measurement
+//		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
+//		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
+//		self.positiveOnly = positiveOnly
+//		self.nonZero = nonZero
+//		specifiedUnitSystems = nil
+//		convertOnChangeOfUnits = convertOnChange
+//		fixedUnit = false
+//	}
 	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false)  {
 		self.description = description
 		_measurement = measurement
@@ -1050,7 +1061,15 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		specifiedUnitSystems = allowedUnits
 		self.tolerance = tolerance
 	}
-	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, tolerance: Double = 0.000001)  {
+//	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, tolerance: Double = 0.000001)  {
+//		self.description = description
+//		self.measurement = measurement
+//		_measurementUnit = State(initialValue: measurement.unit.symbol)
+//		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
+//		specifiedUnitSystems = nil
+//		self.tolerance = tolerance
+//	}
+	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, tolerance: Double = 0.000001)  {
 		self.description = description
 		self.measurement = measurement
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
