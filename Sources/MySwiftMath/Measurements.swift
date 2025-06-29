@@ -1151,6 +1151,12 @@ public struct ENGRUnitPicker<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	@Binding var unitString: String
 	let allowedUnitSystems: [UnitSystem]
 	
+	public init(description: String, unitString: Binding<String>, allowedUnitSystems: [UnitSystem]) {
+		self.description = description
+		_unitString = unitString
+		self.allowedUnitSystems = allowedUnitSystems
+	}
+	
 	public var body: some View {
 		Picker(description, selection: $unitString) {
 			if unit.mixedUnitSystems {
