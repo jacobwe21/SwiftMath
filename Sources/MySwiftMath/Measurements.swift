@@ -951,7 +951,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		HStack {
 			Text("\(description)")
 			Spacer()
-			TextField(description, value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
 				.focused($thisMeasurementIsFocused)
@@ -975,7 +975,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		HStack {
 			Text("\(description)")
 			Spacer()
-			TextField(description, value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
 				.keyboardType(UIKeyboardType.numbersAndPunctuation)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
