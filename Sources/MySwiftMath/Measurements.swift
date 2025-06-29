@@ -1201,6 +1201,8 @@ public struct FloatingPointMathParseableFormatStyle: ParseableFormatStyle {
 		value.formatted(.number)
 	}
 	
+	public init() {}
+	
 	public struct MathParser: ParseStrategy {
 		public func parse(_ value: String) throws -> Double {
 //			let expn = NSExpression(format:value)
