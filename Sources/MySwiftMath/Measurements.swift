@@ -1146,12 +1146,12 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 	}
 }
 
-private struct ENGRUnitPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
+public struct ENGRUnitPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
 	let description: String
 	@Binding var unitString: String
 	let allowedUnitSystems: [UnitSystem]
 	
-	var body: some View {
+	public var body: some View {
 		Picker(description, selection: $unitString) {
 			if unit.mixedUnitSystems {
 				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
