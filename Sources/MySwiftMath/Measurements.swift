@@ -195,6 +195,30 @@ extension UnitLength: EngineeringUnit {
 			return true
 		} else { return false }
 	}
+	public var squared: UnitArea? {
+		switch self {
+		case .kilometers: UnitArea.squareKilometers
+		case .meters: UnitArea.squareFeet
+		case .centimeters: UnitArea.squareCentimeters
+		case .millimeters: UnitArea.squareMillimeters
+		case .nanometers: UnitArea.squareNanometers
+		case .miles: UnitArea.squareMiles
+		case .yards: UnitArea.squareYards
+		case .feet: UnitArea.squareFeet
+		case .inches: UnitArea.squareInches
+		default: nil
+		}
+	}
+	public var tesseracted: UnitTesseract? {
+		switch self {
+		case .meters: UnitTesseract.quarticMeters
+		case .centimeters: UnitTesseract.quarticCentimeters
+		case .millimeters: UnitTesseract.quarticMillimeters
+		case .feet: UnitTesseract.quarticFeet
+		case .inches: UnitTesseract.quarticInches
+		default: nil
+		}
+	}
 }
 public extension Measurement where UnitType: UnitLength {
 	func squared() -> Measurement<UnitArea> {
@@ -232,6 +256,17 @@ extension UnitArea: EngineeringUnit {
 		if self ==|| [.acres,.squareFeet,.squareInches,.squareMiles,.squareYards] {
 			return true
 		} else { return false }
+	}
+	public var squared: UnitTesseract? {
+		switch self {
+		case .squareMeters: UnitTesseract.quarticMeters
+		case .squareCentimeters: UnitTesseract.quarticCentimeters
+		case .squareMillimeters: UnitTesseract.quarticMillimeters
+		case .squareMiles: UnitTesseract.quarticFeet
+		case .squareFeet: UnitTesseract.quarticFeet
+		case .squareInches: UnitTesseract.quarticInches
+		default: nil
+		}
 	}
 }
 public extension Measurement where UnitType: UnitArea {
