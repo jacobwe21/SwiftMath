@@ -212,7 +212,7 @@ extension UnitArea: EngineeringUnit {
 	public static let allEngineeringUnits: [UnitArea] = [.squareMeters,.squareCentimeters,.squareMillimeters,.squareFeet,.squareInches]
 	
 	/// The unit that results by taking the square root of a UnitArea unit.
-	var linearBaseUnit: UnitLength? {
+	public var linearBaseUnit: UnitLength? {
 		switch self {
 		case .squareMegameters: UnitLength.megameters
 		case .squareKilometers: UnitLength.kilometers
