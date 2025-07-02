@@ -1120,7 +1120,9 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			Text(description)
 			Spacer()
 			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(sigFigs: ...6))
-			ENGRUnitPicker<EngrUnitType>(description: os == .macOS ? "":"Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+//			ENGRUnitPicker<EngrUnitType>(description: os == .macOS ? "":"Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+//				.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
+			ENGRUnitPicker<EngrUnitType>(description: nil, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
 				.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
 		}
 		.onChange(of: preferredUnitsData) {
@@ -1182,18 +1184,18 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 }
 
 public struct ENGRUnitPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
-	let description: String
+	let description: String?
 	@Binding var unitString: String
 	let allowedUnitSystems: [UnitSystem]
 	
-	public init(description: String, unitString: Binding<String>, allowedUnitSystems: [UnitSystem]) {
+	public init(description: String? = nil, unitString: Binding<String>, allowedUnitSystems: [UnitSystem]) {
 		self.description = description
 		_unitString = unitString
 		self.allowedUnitSystems = allowedUnitSystems
 	}
 	
 	public var body: some View {
-		Picker(description, selection: $unitString) {
+		Picker(description ?? "", selection: $unitString) {
 			if unit.mixedUnitSystems {
 				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
 					Text(unitSymbol).tag(unitSymbol)
