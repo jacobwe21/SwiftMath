@@ -885,8 +885,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	@State private var allowedUnitSystems: [UnitSystem]
 	let convertOnChangeOfUnits: Bool
 	let fixedUnit: Bool
+	let embededInForm: Bool
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embededInForm: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
@@ -896,8 +897,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		specifiedUnitSystems = allowedUnits
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
+		self.embededInForm = embededInForm
 	}
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embededInForm: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
@@ -907,6 +909,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		specifiedUnitSystems = nil
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
+		self.embededInForm = embededInForm
 	}
 //	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
 //		self.description = description
@@ -919,7 +922,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 //		convertOnChangeOfUnits = convertOnChange
 //		fixedUnit = false
 //	}
-	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false)  {
+	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, embededInForm: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
@@ -929,6 +932,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		specifiedUnitSystems = measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI]
 		convertOnChangeOfUnits = false
 		fixedUnit = true
+		self.embededInForm = embededInForm
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -977,6 +981,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				pickerLabel
 				Text("\(measurementUnit)")
 			} else {
+				if !embededInForm {
+					pickerLabel
+				}
 				ENGRUnitPicker(unitType: EngrUnitType.self, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems, label: pickerLabel)
 					.onChange(of: measurementUnit) {
 						onChangeOfUnit()
@@ -1008,7 +1015,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
 				.textFieldStyle(.roundedBorder)
 				.keyboardType(UIKeyboardType.numbersAndPunctuation)
-				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
+				.frame(minWidth: 60, idealWidth: 100, maxWidth: 120)
 				.focused($thisMeasurementIsFocused)
 				.onSubmit {
 					validateMeasurementValue()
