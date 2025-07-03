@@ -961,7 +961,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 			if fixedUnit {
 				Text("\(measurementUnit)")
 			} else {
-				ENGRUnitPicker<EngrUnitType>(description: "Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+				ENGRUnitPicker(unitType: EngrUnitType.self, description: "Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
 					.onChange(of: measurementUnit) {
 						onChangeOfUnit()
 					}
@@ -973,20 +973,11 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 #else
 	var iOSbody: some View {
 		HStack {
-			Text("\(description)")
-			Spacer()
-			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
-				.textFieldStyle(.roundedBorder)
-				.keyboardType(UIKeyboardType.numbersAndPunctuation)
-				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
-				.focused($thisMeasurementIsFocused)
-				.onSubmit {
-					validateMeasurementValue()
-				}
 			if fixedUnit {
+				pickerLabel
 				Text("\(measurementUnit)")
 			} else {
-				ENGRUnitPicker<EngrUnitType>(description: "Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+				ENGRUnitPicker(unitType: EngrUnitType.self, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems, label: pickerLabel)
 					.onChange(of: measurementUnit) {
 						onChangeOfUnit()
 					}
@@ -1009,6 +1000,20 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 //				}
 //			}
 //		}
+	}
+	var pickerLabel: some View {
+		HStack {
+			Text("\(description)")
+			Spacer()
+			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+				.textFieldStyle(.roundedBorder)
+				.keyboardType(UIKeyboardType.numbersAndPunctuation)
+				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
+				.focused($thisMeasurementIsFocused)
+				.onSubmit {
+					validateMeasurementValue()
+				}
+		}
 	}
 #endif
 	
@@ -1116,17 +1121,18 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
 	
 	public var body: some View {
+		ENGRUnitPicker(unitType: EngrUnitType.self, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems, label: label)
+			.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
+			.onChange(of: preferredUnitsData) {
+				allowedUnitSystems = specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
+			}
+	}
+	
+	public var label: some View {
 		HStack {
 			Text(description)
 			Spacer()
 			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(sigFigs: ...6))
-//			ENGRUnitPicker<EngrUnitType>(description: os == .macOS ? "":"Unit for \(description)", unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
-//				.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
-			ENGRUnitPicker<EngrUnitType>(description: nil, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
-				.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
-		}
-		.onChange(of: preferredUnitsData) {
-			allowedUnitSystems = specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
 		}
 	}
 }
@@ -1168,34 +1174,38 @@ public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where E
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
 	
 	public var body: some View {
-		HStack {
-//			Text(description)
-//			Spacer()
-			ENGRUnitPicker<EngrUnitType>(description: description, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
-				.onChange(of: measurementUnit) {
-					unit = EngrUnitType.unit(for: measurementUnit)
-				}
-		}
-		.onChange(of: preferredUnitsData) {
-			allowedUnitSystems = specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
-			measurementUnit = unit.symbol
-		}
+		ENGRUnitPicker(unitType: EngrUnitType.self, description: description, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems)
+			.onChange(of: measurementUnit) {
+				unit = EngrUnitType.unit(for: measurementUnit)
+			}
+			.onChange(of: preferredUnitsData) {
+				allowedUnitSystems = specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
+				measurementUnit = unit.symbol
+			}
 	}
 }
 
-public struct ENGRUnitPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
-	let description: String?
+public struct ENGRUnitPicker<EngrUnitType: EngineeringUnit, V>: View where EngrUnitType == EngrUnitType.EngrDimension, V: View {
+	let unitType: EngrUnitType.Type
+	let label: V
 	@Binding var unitString: String
 	let allowedUnitSystems: [UnitSystem]
 	
-	public init(description: String? = nil, unitString: Binding<String>, allowedUnitSystems: [UnitSystem]) {
-		self.description = description
+	public init(unitType: EngrUnitType.Type, description: String, unitString: Binding<String>, allowedUnitSystems: [UnitSystem]) where V == Text {
+		self.unitType = unitType
+		self.label = Text(description)
+		_unitString = unitString
+		self.allowedUnitSystems = allowedUnitSystems
+	}
+	public init(unitType: EngrUnitType.Type, unitString: Binding<String>, allowedUnitSystems: [UnitSystem], label: V) {
+		self.unitType = unitType
+		self.label = label
 		_unitString = unitString
 		self.allowedUnitSystems = allowedUnitSystems
 	}
 	
 	public var body: some View {
-		Picker(description ?? "", selection: $unitString) {
+		Picker(selection: $unitString) {
 			if unit.mixedUnitSystems {
 				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
 					Text(unitSymbol).tag(unitSymbol)
@@ -1215,6 +1225,8 @@ public struct ENGRUnitPicker<EngrUnitType: EngineeringUnit>: View where EngrUnit
 					}
 				}
 			}
+		} label: {
+			label
 		}
 		.pickerStyle(.menu)
 	}
