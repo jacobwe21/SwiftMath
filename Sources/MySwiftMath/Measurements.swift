@@ -885,9 +885,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	@State private var allowedUnitSystems: [UnitSystem]
 	let convertOnChangeOfUnits: Bool
 	let fixedUnit: Bool
-	let embededInForm: Bool
+	let embeddedInForm: Bool
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embededInForm: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embeddedInForm: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
@@ -897,9 +897,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		specifiedUnitSystems = allowedUnits
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
-		self.embededInForm = embededInForm
+		self.embeddedInForm = embeddedInForm
 	}
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embededInForm: Bool = false)  {
+	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embeddedInForm: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
@@ -909,7 +909,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		specifiedUnitSystems = nil
 		convertOnChangeOfUnits = convertOnChange
 		fixedUnit = false
-		self.embededInForm = embededInForm
+		self.embeddedInForm = embeddedInForm
 	}
 //	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
 //		self.description = description
@@ -922,7 +922,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 //		convertOnChangeOfUnits = convertOnChange
 //		fixedUnit = false
 //	}
-	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, embededInForm: Bool = false)  {
+	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, embeddedInForm: Bool = false)  {
 		self.description = description
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
@@ -932,7 +932,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		specifiedUnitSystems = measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI]
 		convertOnChangeOfUnits = false
 		fixedUnit = true
-		self.embededInForm = embededInForm
+		self.embeddedInForm = embeddedInForm
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
@@ -981,7 +981,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 				pickerLabel
 				Text("\(measurementUnit)")
 			} else {
-				if !embededInForm {
+				if !embeddedInForm {
 					pickerLabel
 				}
 				ENGRUnitPicker(unitType: EngrUnitType.self, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems, label: pickerLabel)
@@ -1099,14 +1099,16 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	let specifiedUnitSystems: [UnitSystem]?
 	@State private var allowedUnitSystems: [UnitSystem]
 	let tolerance: Double
+	let embeddedInForm: Bool
 	
-	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem], tolerance: Double = 0.000001)  {
+	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem], tolerance: Double = 0.000001, embeddedInForm: Bool = false)  {
 		self.description = description
 		self.measurement = measurement
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
 		_allowedUnitSystems = State(initialValue: allowedUnits)
 		specifiedUnitSystems = allowedUnits
 		self.tolerance = tolerance
+		self.embeddedInForm = embeddedInForm
 	}
 //	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, tolerance: Double = 0.000001)  {
 //		self.description = description
@@ -1116,23 +1118,29 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 //		specifiedUnitSystems = nil
 //		self.tolerance = tolerance
 //	}
-	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, tolerance: Double = 0.000001)  {
+	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, tolerance: Double = 0.000001, embeddedInForm: Bool = false)  {
 		self.description = description
 		self.measurement = measurement
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
 		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
 		specifiedUnitSystems = nil
 		self.tolerance = tolerance
+		self.embeddedInForm = embeddedInForm
 	}
 	
 	let measurementFormatStyle: Measurement<EngrUnitType>.FormatStyle = .measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .localizedDouble(locale: Locale.current))
 	
 	public var body: some View {
-		ENGRUnitPicker(unitType: EngrUnitType.self, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems, label: label)
-			.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
-			.onChange(of: preferredUnitsData) {
-				allowedUnitSystems = specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
+		HStack {
+			if !embeddedInForm {
+				label
 			}
+			ENGRUnitPicker(unitType: EngrUnitType.self, unitString: $measurementUnit, allowedUnitSystems: allowedUnitSystems, label: label)
+				.macOS { $0.frame(minWidth: 70, idealWidth: 100, maxWidth: 120) }
+				.onChange(of: preferredUnitsData) {
+					allowedUnitSystems = specifiedUnitSystems ?? UnitSystem.selection(for: preferredUnitsData)
+				}
+		}
 	}
 	
 	public var label: some View {
