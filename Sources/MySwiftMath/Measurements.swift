@@ -1160,7 +1160,7 @@ public struct ENGRNumberField: View {
 	var onSubmit: ()->()
 	let unit: String?
 	
-	init(_ description: String, value: Binding<Double>, prompt: Text? = nil, unit: String? = nil, onSubmit: @escaping () -> Void) {
+	public init(_ description: String, value: Binding<Double>, prompt: Text? = nil, unit: String? = nil, onSubmit: @escaping () -> Void) {
 		self.description = description
 		_value = value
 		self.prompt = prompt
@@ -1168,7 +1168,7 @@ public struct ENGRNumberField: View {
 		self.onSubmit = onSubmit
 	}
 	
-	var body: some View {
+	public var body: some View {
 		HStack {
 			Text(description)
 			Spacer()
@@ -1190,12 +1190,12 @@ public struct ENGRNumberDisplay: View {
 	var description: String
 	let value: Double
 	
-	init(_ description: String, value: Double) {
+	public init(_ description: String, value: Double) {
 		self.description = description
 		self.value = value
 	}
 	
-	var body: some View {
+	public var body: some View {
 		HStack {
 			Text(description)
 			Spacer()
