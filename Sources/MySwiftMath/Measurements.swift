@@ -1152,6 +1152,59 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	}
 }
 
+public struct ENGRNumberField: View {
+	
+	var description: String
+	@Binding var value: Double
+	var prompt: Text?
+	var onSubmit: ()->()
+	let unit: String?
+	
+	init(_ description: String, value: Binding<Double>, prompt: Text? = nil, unit: String? = nil, onSubmit: @escaping () -> Void) {
+		self.description = description
+		_value = value
+		self.prompt = prompt
+		self.unit = unit
+		self.onSubmit = onSubmit
+	}
+	
+	var body: some View {
+		HStack {
+			Text(description)
+			Spacer()
+			TextField(description, value: $value, format: FloatingPointMathParseableFormatStyle(), prompt: prompt)
+				.textFieldStyle(.roundedBorder)
+				.keyboardType(UIKeyboardType.numbersAndPunctuation)
+				.frame(minWidth: 50, idealWidth: 75, maxWidth: 100)
+				.onSubmit {
+					onSubmit()
+				}
+			if let unit {
+				Text(unit)
+			}
+		}
+	}
+}
+public struct ENGRNumberDisplay: View {
+	
+	var description: String
+	let value: Double
+	
+	init(_ description: String, value: Double) {
+		self.description = description
+		self.value = value
+	}
+	
+	var body: some View {
+		HStack {
+			Text(description)
+			Spacer()
+			Text(value.formatted(FloatingPointMathParseableFormatStyle()))
+				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
+		}
+	}
+}
+
 public struct ENGRMeasurementPicker<EngrUnitType: EngineeringUnit>: View where EngrUnitType == EngrUnitType.EngrDimension {
 	
 	let description: String
