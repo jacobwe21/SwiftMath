@@ -107,12 +107,12 @@ public final class UnitDensity: Dimension, EngineeringUnit, @unchecked Sendable 
 	public static let allEngineeringUnits: [UnitDensity] = [.gramPerCubicMillimeter,.kilogramPerCubicMeter,.kilogramPerCubicMillimeter,.newtonsPerCubicMeter,.poundsPerCubicInch,.poundsPerCubicFoot,.poundsPerCubicYard]
 	
 	public static let kilogramPerCubicMeter = UnitDensity(symbol: "kg/m³", converter: UnitConverterLinear(coefficient: 1.0))
-	public static let kilogramPerCubicMillimeter = UnitDensity(symbol: "kg/mm³", converter: UnitConverterLinear(coefficient: 1e-9))
+	public static let kilogramPerCubicMillimeter = UnitDensity(symbol: "kg/mm³", converter: UnitConverterLinear(coefficient: 1e9))
 	public static let gramPerCubicMillimeter = UnitDensity(symbol: "g/cm³", converter: UnitConverterLinear(coefficient: 1000))
-	public static let newtonsPerCubicMeter = UnitDensity(symbol: "N/m³", converter: UnitConverterLinear(coefficient: 9.80665))
-	public static let poundsPerCubicInch = UnitDensity(symbol: "lb/in³", converter: UnitConverterLinear(coefficient: 0.009269944082152854))
+	public static let newtonsPerCubicMeter = UnitDensity(symbol: "N/m³", converter: UnitConverterLinear(coefficient: 0.10197162129779283))
+	public static let poundsPerCubicInch = UnitDensity(symbol: "lb/in³", converter: UnitConverterLinear(coefficient: 27679.90471020311))
 	public static let poundsPerCubicFoot = UnitDensity(symbol: "lb/ft³", converter: UnitConverterLinear(coefficient: 16.018463373960135))
-	public static let poundsPerCubicYard = UnitDensity(symbol: "lb/yd³", converter: UnitConverterLinear(coefficient: 432.4985110969236))
+	public static let poundsPerCubicYard = UnitDensity(symbol: "lb/yd³", converter: UnitConverterLinear(coefficient: 0.5932764212577827))
 	
 	public override class func baseUnit() -> Self {
 		return UnitDensity.kilogramPerCubicMeter as! Self
