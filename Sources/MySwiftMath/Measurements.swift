@@ -1023,18 +1023,22 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	}
 	var pickerLabel: some View {
 		HStack {
-			ViewThatFits(in: .horizontal) {
-				HStack {
-					Text(description)
-					Spacer()
-					if let shortDescription {
-						Text(shortDescription)
-					}
-				}
-				HStack {
-					Text(description)
-					Spacer()
-				}
+//			ViewThatFits(in: .horizontal) {
+//				HStack {
+//					Text(description)
+//					Spacer()
+//					if let shortDescription {
+//						Text(shortDescription)
+//					}
+//				}
+//				HStack {
+//					Text(description)
+//					Spacer()
+//				}
+//			}
+			HStack {
+				Text(description)
+				Spacer()
 			}
 			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(shortDescription ?? ""))
 				.textFieldStyle(.roundedBorder)
@@ -1091,18 +1095,22 @@ public struct ENGRValueFixedUnitField: View {
 	
 	public var body: some View {
 		HStack {
-			ViewThatFits(in: .horizontal) {
-				HStack {
-					Text(description)
-					Spacer()
-					if let shortDescription {
-						Text(shortDescription)
-					}
-				}
-				HStack {
-					Text(description)
-					Spacer()
-				}
+//			ViewThatFits(in: .horizontal) {
+//				HStack {
+//					Text(description)
+//					Spacer()
+//					if let shortDescription {
+//						Text(shortDescription)
+//					}
+//				}
+//				HStack {
+//					Text(description)
+//					Spacer()
+//				}
+//			}
+			HStack {
+				Text(description)
+				Spacer()
 			}
 			TextField(description, value: $measurement, format: FloatingPointMathParseableFormatStyle(), prompt: Text(shortDescription ?? ""))
 				.textFieldStyle(.roundedBorder)
@@ -1186,18 +1194,22 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	
 	public var label: some View {
 		HStack {
-			ViewThatFits(in: .horizontal) {
-				HStack {
-					Text(description)
-					Spacer()
-					if let shortDescription {
-						Text(shortDescription)
-					}
-				}
-				HStack {
-					Text(description)
-					Spacer()
-				}
+//			ViewThatFits(in: .horizontal) {
+//				HStack {
+//					Text(description)
+//					Spacer()
+//					if let shortDescription {
+//						Text(shortDescription)
+//					}
+//				}
+//				HStack {
+//					Text(description)
+//					Spacer()
+//				}
+//			}
+			HStack {
+				Text(description)
+				Spacer()
 			}
 			Spacer()
 			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(sigFigs: ...6))
@@ -1225,18 +1237,22 @@ public struct ENGRNumberField: View {
 	
 	public var body: some View {
 		HStack {
-			ViewThatFits(in: .horizontal) {
-				HStack {
-					Text(description)
-					Spacer()
-					if let shortDescription {
-						Text(shortDescription)
-					}
-				}
-				HStack {
-					Text(description)
-					Spacer()
-				}
+//			ViewThatFits(in: .horizontal) {
+//				HStack {
+//					Text(description)
+//					Spacer()
+//					if let shortDescription {
+//						Text(shortDescription)
+//					}
+//				}
+//				HStack {
+//					Text(description)
+//					Spacer()
+//				}
+//			}
+			HStack {
+				Text(description)
+				Spacer()
 			}
 			Spacer()
 			TextField(description, value: $value, format: FloatingPointMathParseableFormatStyle(), prompt: prompt)
@@ -1266,18 +1282,22 @@ public struct ENGRNumberDisplay: View {
 	
 	public var body: some View {
 		HStack {
-			ViewThatFits(in: .horizontal) {
-				HStack {
-					Text(description)
-					Spacer()
-					if let shortDescription {
-						Text(shortDescription)
-					}
-				}
-				HStack {
-					Text(description)
-					Spacer()
-				}
+//			ViewThatFits(in: .horizontal) {
+//				HStack {
+//					Text(description)
+//					Spacer()
+//					if let shortDescription {
+//						Text(shortDescription)
+//					}
+//				}
+//				HStack {
+//					Text(description)
+//					Spacer()
+//				}
+//			}
+			HStack {
+				Text(description)
+				Spacer()
 			}
 			Spacer()
 			Text(value.formatted(FloatingPointMathParseableFormatStyle()))
