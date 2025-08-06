@@ -868,6 +868,7 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	
 	@Environment(\.deviceOS) var os
 	let description: String
+	let shortDescription: String?
 	@Binding var measurement: Measurement<EngrUnitType>
 //	var measurementValue: Binding<Double> {
 //		let unit = EngrUnitType.unit(for: measurement.unit.symbol)
@@ -892,8 +893,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	let fixedUnit: Bool
 	let embeddedInForm: Bool
 	
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embeddedInForm: Bool = false)  {
+	public init(shortDescription: String? = nil, _ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, allowedUnits: [UnitSystem], positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embeddedInForm: Bool = false)  {
 		self.description = description
+		self.shortDescription = shortDescription
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		_allowedUnitSystems = State(initialValue: allowedUnits)
@@ -904,8 +906,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		fixedUnit = false
 		self.embeddedInForm = embeddedInForm
 	}
-	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embeddedInForm: Bool = false)  {
+	public init(shortDescription: String? = nil, _ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false, embeddedInForm: Bool = false)  {
 		self.description = description
+		self.shortDescription = shortDescription
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
@@ -916,7 +919,8 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		fixedUnit = false
 		self.embeddedInForm = embeddedInForm
 	}
-//	public init(_ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
+//	public init(_ shortDescription: String? = nil, _ description: String, _ measurement: Binding<Measurement<EngrUnitType>>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
+// 		self.shortDescription = shortDescription
 //		self.description = description
 //		_measurement = measurement
 //		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
@@ -927,8 +931,9 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 //		convertOnChangeOfUnits = convertOnChange
 //		fixedUnit = false
 //	}
-	public init(_ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, embeddedInForm: Bool = false)  {
+	public init(shortDescription: String? = nil, _ description: String, fixedMeasurement measurement: Binding<Measurement<EngrUnitType>>, positiveOnly: Bool = false, nonZero: Bool = false, embeddedInForm: Bool = false)  {
 		self.description = description
+		self.shortDescription = shortDescription
 		_measurement = measurement
 		_measurementUnit = State(initialValue: measurement.wrappedValue.unit.symbol)
 		_allowedUnitSystems = State(initialValue: measurement.wrappedValue.unit.isImperial ? [.imperial]:[.SI])
@@ -960,7 +965,10 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 		HStack {
 			Text("\(description)")
 			Spacer()
-			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+			if let shortDescription {
+				Text(shortDescription)
+			}
+			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(shortDescription ?? ""))
 				.textFieldStyle(.roundedBorder)
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 120)
 				.focused($thisMeasurementIsFocused)
@@ -1015,9 +1023,20 @@ public struct ENGRValueField<EngrUnitType: EngineeringUnit>: View where EngrUnit
 	}
 	var pickerLabel: some View {
 		HStack {
-			Text("\(description)")
-			Spacer()
-			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+			ViewThatFits(in: .horizontal) {
+				HStack {
+					Text(description)
+					Spacer()
+					if let shortDescription {
+						Text(shortDescription)
+					}
+				}
+				HStack {
+					Text(description)
+					Spacer()
+				}
+			}
+			TextField("", value: $measurement.value, format: FloatingPointMathParseableFormatStyle(), prompt: Text(shortDescription ?? ""))
 				.textFieldStyle(.roundedBorder)
 				.keyboardType(UIKeyboardType.numbersAndPunctuation)
 				.frame(minWidth: 60, idealWidth: 100, maxWidth: 120)
@@ -1052,6 +1071,7 @@ public struct ENGRValueFixedUnitField: View {
 	
 	@Environment(\.deviceOS) var os
 	let description: String
+	let shortDescription: String?
 	@Binding var measurement: Double
 	let unit: String
 	//let minValue: Measurement<EngrUnitType>?
@@ -1060,8 +1080,9 @@ public struct ENGRValueFixedUnitField: View {
 	let positiveOnly: Bool
 	let nonZero: Bool
 	
-	public init(_ description: String, _ measurement: Binding<Double>, unitSymbol: String, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
+	public init(shortDescription: String? = nil, _ description: String, _ measurement: Binding<Double>, unitSymbol: String, positiveOnly: Bool = false, nonZero: Bool = false, convertOnChange: Bool = false)  {
 		self.description = description
+		self.shortDescription = shortDescription
 		_measurement = measurement
 		self.unit = unitSymbol
 		self.positiveOnly = positiveOnly
@@ -1070,9 +1091,20 @@ public struct ENGRValueFixedUnitField: View {
 	
 	public var body: some View {
 		HStack {
-			Text("\(description)")
-			Spacer()
-			TextField(description, value: $measurement, format: FloatingPointMathParseableFormatStyle(), prompt: Text(""))
+			ViewThatFits(in: .horizontal) {
+				HStack {
+					Text(description)
+					Spacer()
+					if let shortDescription {
+						Text(shortDescription)
+					}
+				}
+				HStack {
+					Text(description)
+					Spacer()
+				}
+			}
+			TextField(description, value: $measurement, format: FloatingPointMathParseableFormatStyle(), prompt: Text(shortDescription ?? ""))
 				.textFieldStyle(.roundedBorder)
 			#if !os(macOS)
 				.keyboardType(UIKeyboardType.numbersAndPunctuation)
@@ -1098,6 +1130,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	
 	@Environment(\.deviceOS) var os
 	let description: String
+	let shortDescription: String?
 	let measurement: Measurement<EngrUnitType>
 	@State private var measurementUnit: String
 	@AppStorage("preferredUnitSystem") var preferredUnitsData: String = "Imperial"
@@ -1106,8 +1139,9 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	let tolerance: Double
 	let embeddedInForm: Bool
 	
-	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem], tolerance: Double = 0.000001, embeddedInForm: Bool = false)  {
+	public init(shortDescription: String? = nil, _ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem], tolerance: Double = 0.000001, embeddedInForm: Bool = false)  {
 		self.description = description
+		self.shortDescription = shortDescription
 		self.measurement = measurement
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
 		_allowedUnitSystems = State(initialValue: allowedUnits)
@@ -1115,16 +1149,18 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 		self.tolerance = tolerance
 		self.embeddedInForm = embeddedInForm
 	}
-//	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, tolerance: Double = 0.000001)  {
+//	public init(_ shortDescription: String? = nil, _ description: String, _ measurement: Measurement<EngrUnitType>, defaultImperialUnit: EngrUnitType, defaultSIUnit: EngrUnitType, tolerance: Double = 0.000001)  {
 //		self.description = description
+//		self.shortDescription = shortDescription
 //		self.measurement = measurement
 //		_measurementUnit = State(initialValue: measurement.unit.symbol)
 //		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
 //		specifiedUnitSystems = nil
 //		self.tolerance = tolerance
 //	}
-	public init(_ description: String, _ measurement: Measurement<EngrUnitType>, tolerance: Double = 0.000001, embeddedInForm: Bool = false)  {
+	public init(shortDescription: String? = nil, _ description: String, _ measurement: Measurement<EngrUnitType>, tolerance: Double = 0.000001, embeddedInForm: Bool = false)  {
 		self.description = description
+		self.shortDescription = shortDescription
 		self.measurement = measurement
 		_measurementUnit = State(initialValue: measurement.unit.symbol)
 		_allowedUnitSystems = State(initialValue: UnitSystem.selection(for: UserDefaults.standard.string(forKey: "preferredUnitSystem") ?? "Imperial"))
@@ -1150,7 +1186,19 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	
 	public var label: some View {
 		HStack {
-			Text(description)
+			ViewThatFits(in: .horizontal) {
+				HStack {
+					Text(description)
+					Spacer()
+					if let shortDescription {
+						Text(shortDescription)
+					}
+				}
+				HStack {
+					Text(description)
+					Spacer()
+				}
+			}
 			Spacer()
 			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(sigFigs: ...6))
 		}
@@ -1159,23 +1207,37 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 
 public struct ENGRNumberField: View {
 	
-	var description: String
+	let description: String
+	let shortDescription: String?
 	@Binding var value: Double
 	var prompt: Text?
 	var onSubmit: ()->()
 	let unit: String?
 	
-	public init(_ description: String, value: Binding<Double>, prompt: Text? = nil, unit: String? = nil, onSubmit: @escaping () -> Void) {
+	public init(shortDescription: String? = nil, _ description: String, value: Binding<Double>, prompt: Text? = nil, unit: String? = nil, onSubmit: @escaping () -> Void) {
 		self.description = description
+		self.shortDescription = shortDescription
 		_value = value
-		self.prompt = prompt
+		self.prompt = prompt ?? (shortDescription != nil ? Text(shortDescription!):nil)
 		self.unit = unit
 		self.onSubmit = onSubmit
 	}
 	
 	public var body: some View {
 		HStack {
-			Text(description)
+			ViewThatFits(in: .horizontal) {
+				HStack {
+					Text(description)
+					Spacer()
+					if let shortDescription {
+						Text(shortDescription)
+					}
+				}
+				HStack {
+					Text(description)
+					Spacer()
+				}
+			}
 			Spacer()
 			TextField(description, value: $value, format: FloatingPointMathParseableFormatStyle(), prompt: prompt)
 				.textFieldStyle(.roundedBorder)
@@ -1192,17 +1254,31 @@ public struct ENGRNumberField: View {
 }
 public struct ENGRNumberDisplay: View {
 	
-	var description: String
+	let description: String
+	let shortDescription: String?
 	let value: Double
 	
-	public init(_ description: String, value: Double) {
+	public init(shortDescription: String? = nil, _ description: String, value: Double) {
 		self.description = description
+		self.shortDescription = shortDescription
 		self.value = value
 	}
 	
 	public var body: some View {
 		HStack {
-			Text(description)
+			ViewThatFits(in: .horizontal) {
+				HStack {
+					Text(description)
+					Spacer()
+					if let shortDescription {
+						Text(shortDescription)
+					}
+				}
+				HStack {
+					Text(description)
+					Spacer()
+				}
+			}
 			Spacer()
 			Text(value.formatted(FloatingPointMathParseableFormatStyle()))
 				.frame(minWidth: 80, idealWidth: 100, maxWidth: 140)
