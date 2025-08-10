@@ -1378,6 +1378,7 @@ public struct ENGRUnitPicker<EngrUnitType: EngineeringUnit, V>: View where EngrU
 			if unit.mixedUnitSystems {
 				ForEach(EngrUnitType.allEngineeringUnitSymbols, id: \.self) { unitSymbol in
 					Text(unitSymbol).tag(unitSymbol)
+						.accessibilityLabel(unit.description)
 				}
 			} else {
 				if !allowedUnitSystems.contains(.SI) && !unit.isImperial || !allowedUnitSystems.contains(.imperial) && unit.isImperial {
@@ -1386,11 +1387,13 @@ public struct ENGRUnitPicker<EngrUnitType: EngineeringUnit, V>: View where EngrU
 				if allowedUnitSystems.contains(.SI) {
 					ForEach(EngrUnitType.allSIEngineeringUnitSymbols, id: \.self) { unitSymbol in
 						Text(unitSymbol).tag(unitSymbol)
+							.accessibilityLabel(unit.description)
 					}
 				}
 				if allowedUnitSystems.contains(.imperial) {
 					ForEach(EngrUnitType.allImperialEngineeringUnitSymbols, id: \.self) { unitSymbol in
 						Text(unitSymbol).tag(unitSymbol)
+							.accessibilityLabel(unit.description)
 					}
 				}
 			}
