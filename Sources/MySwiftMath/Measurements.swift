@@ -1212,7 +1212,11 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 				Spacer()
 			}
 			Spacer()
-			Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(sigFigs: ...6))
+			if measurement.value.magnitude > 1e8 {
+				Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(FloatingPointFormatStyle().notation(.scientific).precision(.significantDigits(...6))))
+			} else {
+				Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(sigFigs: ...6))
+			}
 		}
 	}
 }
