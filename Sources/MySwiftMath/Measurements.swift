@@ -1147,7 +1147,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 	let tolerance: Double
 	let embeddedInForm: Bool
 	
-	public init(shortDescription: String? = nil, _ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem], tolerance: Double = 0.000001, embeddedInForm: Bool = false)  {
+	public init(shortDescription: String? = nil, _ description: String, _ measurement: Measurement<EngrUnitType>, allowedUnits: [UnitSystem], tolerance: Double = 1e-8, embeddedInForm: Bool = false)  {
 		self.description = description
 		self.shortDescription = shortDescription
 		self.measurement = measurement
@@ -1166,7 +1166,7 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 //		specifiedUnitSystems = nil
 //		self.tolerance = tolerance
 //	}
-	public init(shortDescription: String? = nil, _ description: String, _ measurement: Measurement<EngrUnitType>, tolerance: Double = 0.000001, embeddedInForm: Bool = false)  {
+	public init(shortDescription: String? = nil, _ description: String, _ measurement: Measurement<EngrUnitType>, tolerance: Double = 1e-8, embeddedInForm: Bool = false)  {
 		self.description = description
 		self.shortDescription = shortDescription
 		self.measurement = measurement
