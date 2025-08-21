@@ -1220,6 +1220,8 @@ public struct ENGRValueDisplay<EngrUnitType: EngineeringUnit>: View where EngrUn
 			} else if measurement.value.magnitude < 1e-5 {
 				Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance)
 					.formatted(FloatingPointFormatStyle().notation(.scientific).precision(.significantDigits(...4))))
+			} else if measurement.value.magnitude < 1 {
+				Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(sigFigs: ...4))
 			} else {
 				Text(measurement.converted(to: EngrUnitType.unit(for: measurementUnit)).value.zeroIfClose(tolerance: tolerance).formatted(sigFigs: ...8))
 			}
